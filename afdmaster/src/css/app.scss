@@ -1,0 +1,417 @@
+// =============================================
+// AFDMaster - Global Styles
+// Tema: Escala de Cinza Neutra + Dark/Light Mode
+// =============================================
+
+// ===== TEMA CLARO (Padrão) =====
+:root {
+    // Brand color (fallback CSS — JS sobrescreve via brand.js)
+    --qm-brand: #1a1a1a;
+    --qm-brand-light: rgba(26, 26, 26, 0.1);
+    --qm-brand-contrast: #ffffff;
+    --q-primary: var(--qm-brand);
+
+    // Aliases usados pelos componentes (apontam para brand)
+    --qm-primary: var(--qm-brand);
+    --qm-primary-alpha: var(--qm-brand-light);
+
+    // Backgrounds
+    --qm-bg-primary: #ffffff;
+    --qm-bg-secondary: #f5f5f5;
+    --qm-bg-tertiary: #e5e5e5;
+
+    // Surfaces (cards, modais)
+    --qm-surface: #ffffff;
+    --qm-surface-variant: #fafafa;
+
+    // Textos
+    --qm-text-primary: #171717;
+    --qm-text-secondary: #525252;
+    --qm-text-muted: #737373;
+    --qm-text-disabled: #a3a3a3;
+
+    // Bordas
+    --qm-border: #e5e5e5;
+    --qm-border-light: #f5f5f5;
+    --qm-border-hover: #d4d4d4;
+
+    // Inputs
+    --qm-input-bg: #f5f5f5;
+    --qm-input-border: #e5e5e5;
+    --qm-input-border-hover: #d4d4d4;
+    --qm-input-border-focus: var(--qm-brand);
+
+    // Botão neutro (preto no light, branco no dark)
+    --qm-btn-primary-bg: #171717;
+    --qm-btn-primary-text: #ffffff;
+    --qm-btn-primary-hover: #262626;
+
+    // Semânticas
+    --qm-error: #ef4444;
+
+    // Sombras
+    --qm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --qm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --qm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --qm-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    // ===== ANIMAÇÕES =====
+    --qm-transition-duration: 0.3s;
+    --qm-transition-fast: 0.2s;
+}
+
+// ===== TEMA ESCURO =====
+[data-theme="dark"] {
+    // Brand: defaults para o tema escuro (JS pode sobrescrever)
+    --qm-brand: #ffffff;
+    --qm-brand-light: rgba(255, 255, 255, 0.1);
+    --qm-brand-contrast: #1a1a1a;
+
+    // Backgrounds
+    --qm-bg-primary: #0a0a0a;
+    --qm-bg-secondary: #171717;
+    --qm-bg-tertiary: #262626;
+
+    // Surfaces
+    --qm-surface: #171717;
+    --qm-surface-variant: #1f1f1f;
+
+    // Textos
+    --qm-text-primary: #fafafa;
+    --qm-text-secondary: #a3a3a3;
+    --qm-text-muted: #737373;
+    --qm-text-disabled: #525252;
+
+    // Bordas
+    --qm-border: #333333;
+    --qm-border-light: #262626;
+    --qm-border-hover: #525252;
+
+    // Inputs
+    --qm-input-bg: #1f1f1f;
+    --qm-input-border: #525252;
+    --qm-input-border-hover: #737373;
+    --qm-input-border-focus: var(--qm-brand);
+
+    // Botão neutro (branco no dark)
+    --qm-btn-primary-bg: #fafafa;
+    --qm-btn-primary-text: #171717;
+    --qm-btn-primary-hover: #e5e5e5;
+
+    // Semânticas
+    --qm-error: #f87171;
+
+    // Sombras (mais sutis no dark)
+    --qm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --qm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --qm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --qm-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+}
+
+// ===== RESET/BASE =====
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--qm-text-primary);
+    background: var(--qm-bg-secondary);
+    transition: background-color var(--qm-transition-duration) ease, color var(--qm-transition-duration) ease;
+}
+
+// ===== CARDS =====
+.soft-card {
+    background: var(--qm-surface);
+    border-radius: 1.25rem;
+    box-shadow: var(--qm-shadow-lg);
+    border: 1px solid var(--qm-border-light);
+    transition: background-color var(--qm-transition-duration) ease, border-color var(--qm-transition-duration) ease, box-shadow var(--qm-transition-duration) ease;
+}
+
+// ===== INPUTS =====
+.soft-input {
+    .q-field__control {
+        border-radius: 0.75rem !important;
+        background: var(--qm-input-bg) !important;
+        transition: all var(--qm-transition-fast) ease !important;
+
+        &::before {
+            border: 1px solid var(--qm-input-border) !important;
+            transition: border-color var(--qm-transition-fast) ease !important;
+        }
+
+        &:hover::before {
+            border-color: var(--qm-input-border-hover) !important;
+        }
+    }
+
+    .q-field__native,
+    .q-field__prefix,
+    .q-field__suffix,
+    .q-field__input {
+        color: var(--qm-text-primary) !important;
+    }
+
+    .q-field__native::placeholder {
+        color: var(--qm-text-muted) !important;
+    }
+
+    &.q-field--focused .q-field__control::before {
+        border-color: var(--qm-input-border-focus) !important;
+        border-width: 2px !important;
+    }
+}
+
+// ===== BOTÕES =====
+.soft-btn {
+    border-radius: 0.75rem !important;
+    text-transform: none !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    box-shadow: var(--qm-shadow) !important;
+    transition: all var(--qm-transition-fast) ease !important;
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--qm-shadow-lg) !important;
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+// Botão primário (preto no light, branco no dark)
+.soft-btn-primary {
+    background: var(--qm-btn-primary-bg) !important;
+    color: var(--qm-btn-primary-text) !important;
+
+    &:hover {
+        background: var(--qm-btn-primary-hover) !important;
+    }
+}
+
+// ===== CORES SEMÂNTICAS =====
+.text-success {
+    color: #22c55e !important;
+}
+
+.text-danger {
+    color: #ef4444 !important;
+}
+
+.text-warning {
+    color: #f59e0b !important;
+}
+
+.text-info {
+    color: #3b82f6 !important;
+}
+
+.bg-success {
+    background: #22c55e !important;
+    color: #ffffff !important;
+}
+
+.bg-danger {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+.bg-warning {
+    background: #f59e0b !important;
+    color: #1a1a1a !important;
+}
+
+.bg-info {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+// ===== ANIMAÇÕES =====
+.fade-in {
+    animation: fadeIn var(--qm-transition-duration) ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// ===== UTILITÁRIOS =====
+// Prefixados com "qm-" para NÃO colidir com classes do Quasar (.bg-primary, .text-primary, etc.)
+.qm-text-primary {
+    color: var(--qm-text-primary) !important;
+}
+
+.qm-text-secondary {
+    color: var(--qm-text-secondary) !important;
+}
+
+.qm-text-muted {
+    color: var(--qm-text-muted) !important;
+}
+
+.qm-bg-surface {
+    background: var(--qm-surface) !important;
+}
+
+.qm-bg-primary {
+    background: var(--qm-bg-primary) !important;
+}
+
+.qm-bg-secondary {
+    background: var(--qm-bg-secondary) !important;
+}
+
+// ===== QUASAR OVERRIDES =====
+
+// O Quasar compila text-white/text-dark em build baseado no $primary SCSS.
+// Como --q-primary muda em runtime (brand.js), precisamos sobrescrever o texto.
+.q-btn.bg-primary {
+    color: var(--qm-brand-contrast) !important;
+}
+
+// Fix: Drawer/Sidebar background para usar mesma cor do layout
+.q-drawer {
+    background: var(--qm-bg-secondary) !important;
+    background-color: var(--qm-bg-secondary) !important;
+}
+
+.q-drawer__content {
+    background: var(--qm-bg-secondary) !important;
+    background-color: var(--qm-bg-secondary) !important;
+}
+
+// Fix: Layout principal
+.q-layout {
+    background: var(--qm-bg-secondary) !important;
+}
+
+.q-page-container {
+    background: var(--qm-bg-secondary) !important;
+}
+
+// ===== DARK MODE QUASAR OVERRIDES =====
+// Garante que inputs e selects dentro de dialogs tenham texto visível no dark mode
+[data-theme="dark"] {
+
+    // Inputs
+    .q-field__control {
+        color: var(--qm-text-primary) !important;
+    }
+
+    .q-field__native,
+    .q-field__prefix,
+    .q-field__suffix,
+    .q-field__input {
+        color: var(--qm-text-primary) !important;
+    }
+
+    .q-field__label {
+        color: var(--qm-text-muted) !important;
+    }
+
+    .q-field__native::placeholder {
+        color: var(--qm-text-muted) !important;
+    }
+
+    .q-field--outlined .q-field__control::before {
+        border-color: var(--qm-input-border) !important;
+    }
+
+    .q-field--outlined .q-field__control:hover::before {
+        border-color: var(--qm-input-border-hover) !important;
+    }
+
+    .q-field--outlined.q-field--focused .q-field__control::before {
+        border-color: var(--qm-brand) !important;
+    }
+
+    // Hint text
+    .q-field__bottom {
+        color: var(--qm-text-muted) !important;
+    }
+
+    .q-field__messages {
+        color: var(--qm-text-muted) !important;
+    }
+
+    // Selects
+    .q-menu {
+        background: var(--qm-surface) !important;
+        border: 1px solid var(--qm-border) !important;
+    }
+
+    .q-item {
+        color: var(--qm-text-primary) !important;
+
+        &:hover {
+            background: var(--qm-bg-tertiary) !important;
+        }
+    }
+
+    .q-item__section--side {
+        color: var(--qm-text-muted) !important;
+    }
+
+    // Tabs
+    .q-tab__label {
+        color: var(--qm-text-secondary) !important;
+    }
+
+    .q-tab--active .q-tab__label {
+        color: var(--qm-brand) !important;
+    }
+
+    // Separators
+    .q-separator {
+        background: var(--qm-border) !important;
+    }
+
+    // Toggle
+    .q-toggle__label {
+        color: var(--qm-text-primary) !important;
+    }
+
+    // Pagination
+    .q-pagination .q-btn {
+        color: var(--qm-text-secondary) !important;
+    }
+
+    // Tooltips
+    .q-tooltip {
+        background: var(--qm-surface-variant) !important;
+        color: var(--qm-text-primary) !important;
+    }
+
+    // Badge grey fix — increase contrast
+    .q-badge.bg-grey {
+        background: #616161 !important;
+        color: #ffffff !important;
+    }
+
+    .q-badge.bg-grey-7 {
+        background: #757575 !important;
+        color: #ffffff !important;
+    }
+
+    // Flat buttons text
+    .q-btn--flat {
+        color: var(--qm-text-secondary) !important;
+
+        &.text-primary,
+        &[class*="text-primary"] {
+            color: var(--qm-brand) !important;
+        }
+
+        &.text-negative,
+        &[class*="text-negative"] {
+            color: var(--qm-error) !important;
+        }
+    }
+}
