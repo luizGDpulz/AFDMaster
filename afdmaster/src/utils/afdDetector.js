@@ -1,32 +1,43 @@
 /**
  * Utilitário para detectar o formato do arquivo AFD (Portaria 1510 vs 671)
+ *
+ * Estratégia principal:
+ *   Busca a PRIMEIRA ocorrência do tipo de registro "3" (Marcação de Ponto)
+ *   onde linha[9] === '3', e verifica linha[14] === '-'.
+ *
+ *   AFD 671:  NSR(9) + Tipo(1) + DH ISO (2024-06-21T...) → linha[14] = '-' (hífen da data ISO)
+ *   AFD 1510: NSR(9) + Tipo(1) + DDMMAAAA + HHMM + PIS   → linha[14] = dígito numérico
+ *
+ * Fallback:
+ *   Se o arquivo não contiver nenhuma linha tipo "3", usa a heurística
+ *   anterior (verifica linha[1] — normalmente o cabeçalho não tem o hífen
+ *   em [14], então retorna '1510' por padrão).
  */
 
 export function detectAfdFormat(lines) {
-    // Um arquivo AFD válido tem pelo menos Cabeçalho (linha 1) e Trailer (última linha)
-    if (!lines || lines.length <= 2) {
-        return '1510'; // Fallback padrão se não houver linhas de dados suficientes
+    if (!lines || lines.length <= 1) {
+        return '1510'; // arquivo vazio ou só cabeçalho → fallback
     }
 
-    let is671 = true;
-    let hasDataLines = false;
+    // ── Estratégia principal: primeira linha com tipo de registro "3" ──
+    for (const line of lines) {
+        if (!line || line.length < 15) continue;
 
-    // Analisa apenas a linha 2 (índice 1) para ser instantâneo
-    const line = lines[1];
+        const tipo = line[9]; // coluna 010 (índice 9, base 0)
 
-    // Pula se por acaso a linha 2 for completamente vazia (improvável num AFD real)
-    if (line !== undefined && line.trim() !== '') {
-        hasDataLines = true;
-        // No AFD 671, a coluna 15 (índice 14) dos registros de dados sempre contém um hífen '-'
-        if (line.length <= 14 || line[14] !== '-') {
-            is671 = false;
+        if (tipo === '3') {
+            // linha[14] é o 5º caractere do campo data/hora (início no índice 10)
+            // AFD 671:  "2024-06-21T11:42:00-0300" → posição 4 da data = '-'
+            // AFD 1510: "11022026"                 → posição 4 da data = dígito
+            return line[14] === '-' ? '671' : '1510';
         }
     }
 
-    if (hasDataLines && is671) {
+    // ── Fallback: nenhum tipo 3 encontrado — verifica linha 2 (índice 1) ──
+    const fallbackLine = lines[1];
+    if (fallbackLine && fallbackLine.length > 14 && fallbackLine[14] === '-') {
         return '671';
     }
 
-    // Se falhar na verificação do hífen, assume 1510
     return '1510';
 }

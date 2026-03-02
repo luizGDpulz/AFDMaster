@@ -2,15 +2,20 @@ export function useValidators() {
     /**
      * Revalida um array inteiro de registros (usado na carga do arquivo).
      */
-    const validateBulk = (records, portaria, checkNsrSequential = true) => {
+    const validateBulk = (records, portaria, settings = {}) => {
         let lastNsr = 0
         let lastDateByEmploee = {} // para verificar cronologia
         // Config limit de data
         const minDate = new Date('1900-01-01T00:00:00')
         const maxDate = new Date('2029-01-01T00:00:00')
 
-        // Rastreia duplicatas { cpf_dataHora_tipo : true }
-        const hashDuplicatas = {}
+        // Configurações
+        const checkNsrSequential = settings.checkNsrSequential !== false
+        const checkDuplicates = settings.checkDuplicates !== false
+        const toleranceMs = (settings.duplicateToleranceMinutes || 0) * 60 * 1000
+
+        // Rastreia duplicatas: guarda as datas(ms) de batidas por cpf
+        const marcacoesPorFuncionario = {}
 
         // Rastreia eventos em par (Entrada/Saida)
         const paresEmploee = {}
@@ -18,15 +23,17 @@ export function useValidators() {
         records.forEach(rec => {
             rec.erros = [] // zera
 
-            // Validação de NSR
-            if (!rec.nsr || isNaN(rec.nsr)) {
-                rec.erros.push('NSR não numérico ou inexistente')
-            } else {
-                if (checkNsrSequential && rec.tipo !== '1') {
-                    if (rec.nsr <= lastNsr) {
-                        rec.erros.push('NSR fora de ordem ou duplicado')
+            // Validação de NSR (ignorada para o Cabeçalho - tipo 1)
+            if (rec.tipo !== '1') {
+                if (!rec.nsr || isNaN(rec.nsr)) {
+                    rec.erros.push('NSR não numérico ou inexistente')
+                } else {
+                    if (checkNsrSequential) {
+                        if (rec.nsr <= lastNsr) {
+                            rec.erros.push('NSR fora de ordem ou duplicado')
+                        }
+                        lastNsr = rec.nsr
                     }
-                    lastNsr = rec.nsr
                 }
             }
 
@@ -55,22 +62,40 @@ export function useValidators() {
                 }
             }
 
-            // Validações de duplicação
-            if (rec.tipo === '3' && rec.dataHora) {
+            // Validações de duplicação por tempo (tolerância)
+            if (checkDuplicates && rec.tipo === '3' && rec.dataHora) {
                 const empId = rec.cpf || rec.pis
-                const hash = `${empId}_${rec.dataHora}_${rec.tipo}`
-                if (hashDuplicatas[hash]) {
-                    rec.erros.push('Possível marcação duplicada identificada')
+                const dtTime = new Date(rec.dataHora).getTime()
+
+                if (empId && !isNaN(dtTime)) {
+                    if (!marcacoesPorFuncionario[empId]) {
+                        marcacoesPorFuncionario[empId] = []
+                    }
+
+                    // Verifica se já existe batida dentro da janela de tolerância para o mesmo func
+                    const isDuplicata = marcacoesPorFuncionario[empId].some(
+                        (existingMs) => Math.abs(existingMs - dtTime) <= toleranceMs
+                    )
+
+                    if (isDuplicata) {
+                        rec.erros.push(`Aviso: Possível marcação duplicada (intervalo menor ou igual a ${settings.duplicateToleranceMinutes} min)`)
+                    }
+
+                    marcacoesPorFuncionario[empId].push(dtTime)
                 }
-                hashDuplicatas[hash] = true
             }
 
-            // Validação CPF / PIS (Tamanho e numérico)
-            if (rec.cpf && (rec.cpf.length !== 11 || isNaN(rec.cpf))) {
-                rec.erros.push('Aviso: CPF parece inválido ou tamanho incorreto')
-            }
-            if (rec.pis && (rec.pis.length !== 11 || isNaN(rec.pis))) {
-                rec.erros.push('Aviso: PIS parece inválido ou tamanho incorreto')
+            // Validação CPF / PIS baseada na Portaria
+            const isValidNumber = (str) => typeof str === 'string' && /^\d+$/.test(str.trim()) && str.trim() !== '00000000000'
+
+            if (portaria === '671') {
+                if (rec.cpf && !isValidNumber(rec.cpf)) {
+                    rec.erros.push('Erro: CPF apresenta formato inválido')
+                }
+            } else if (portaria === '1510') {
+                if (rec.pis && !isValidNumber(rec.pis)) {
+                    rec.erros.push('Erro: PIS apresenta formato inválido')
+                }
             }
         })
 

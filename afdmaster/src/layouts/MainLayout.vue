@@ -38,6 +38,10 @@
             <span class="breadcrumb-item">AFDMaster</span>
             <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
             <span class="breadcrumb-current">{{ currentPageTitle }}</span>
+            <template v-if="currentPageTitle === 'Analisar AFD' && store.activeTabName">
+               <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
+               <span class="breadcrumb-current text-primary">{{ store.activeTabName }}</span>
+            </template>
           </nav>
         </div>
 
@@ -65,9 +69,9 @@
 <script>
 import { defineComponent, ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAfdStore } from 'src/stores/afdStore'
 import { loadBrandColor } from 'src/utils/brand'
 import AppSidebar from 'src/components/AppSidebar.vue'
-// Se utilizarmos Pinia depois, importamos a store aqui para ver se tem registros (hasRecords).
 
 export default defineComponent({
   name: 'MainLayout',
@@ -78,15 +82,13 @@ export default defineComponent({
 
   setup() {
     const route = useRoute()
+    const store = useAfdStore()
 
     // ===== SIDEBAR =====
     const sidebarOpen = ref(true)
 
     const menuItems = [
-      { path: '/', label: 'Upload' },
-      { path: '/records', label: 'Registros' },
-      { path: '/validation', label: 'Validação' },
-      { path: '/export', label: 'Exportar' },
+      { path: '/', label: 'Analisar AFD' },
       { path: '/settings', label: 'Configurações' }
     ]
 
@@ -134,7 +136,8 @@ export default defineComponent({
       currentPageTitle,
       isDark,
       toggleTheme,
-      hasRecords
+      hasRecords,
+      store
     }
   }
 })

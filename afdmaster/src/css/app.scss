@@ -415,3 +415,38 @@ body {
         }
     }
 }
+
+// ===== ROW DETAIL PANEL (AfdTable) =====
+// Usado via <Teleport to="body"> — precisa ser global
+.row-detail-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1998;
+    background: transparent;
+}
+
+.row-detail-panel {
+    position: fixed;
+    z-index: 1999;
+    background: linear-gradient(to bottom, #f3f6fd, #ffffff);
+    border-top: 2px solid #1565C0;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    padding: 14px 20px 16px;
+    max-height: 300px;
+    overflow-y: auto;
+    // garante que texto longo não quebre o layout
+    box-sizing: border-box;
+}
+
+// Transition para o painel
+.detail-fade-enter-active,
+.detail-fade-leave-active {
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.detail-fade-enter-from,
+.detail-fade-leave-to {
+    opacity: 0;
+    transform: translateY(-6px);
+}

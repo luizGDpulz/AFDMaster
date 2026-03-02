@@ -13,11 +13,16 @@ export const useAfdStore = defineStore('afd', {
 
         fileName: 'Nenhum arquivo',
 
+        // Estado da UI
+        activeTabName: '',
+
         // App Preferences / Settings
         settings: {
             checkNsrSequential: true,
             checkOddMarks: true,
-            reindexNsrExport: false
+            reindexNsrExport: false,
+            checkDuplicates: true,
+            duplicateToleranceMinutes: 5
         }
     }),
 

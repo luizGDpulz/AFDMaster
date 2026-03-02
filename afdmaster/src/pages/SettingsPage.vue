@@ -37,6 +37,41 @@
                 </q-item-section>
               </q-item>
 
+              <!-- Config: Validação de Duplicatas -->
+              <q-item tag="label" v-ripple>
+                <q-item-section>
+                  <q-item-label>Aviso de Marcação Duplicada</q-item-label>
+                  <q-item-label caption>
+                    Aponta um alerta caso um funcionário bata o ponto em um intervalo de tempo muito curto (dentro da tolerância).
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-toggle color="primary" v-model="store.settings.checkDuplicates" />
+                </q-item-section>
+              </q-item>
+
+              <!-- Sub-Config: Tolerância em Minutos (só exibe se duplicatas = true) -->
+              <q-item v-if="store.settings.checkDuplicates" class="q-pl-xl">
+                <q-item-section>
+                  <q-item-label>Minutos de Tolerância</q-item-label>
+                  <q-item-label caption>
+                    Tempo máximo (em minutos) entre batidas para serem consideradas duplicadas da mesma ocorrência.
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side style="min-width: 100px;">
+                  <q-input 
+                     v-model.number="store.settings.duplicateToleranceMinutes" 
+                     type="number" 
+                     dense 
+                     outlined 
+                     min="0" 
+                     max="60"
+                     suffix="min"
+                     class="soft-input bg-white"
+                  />
+                </q-item-section>
+              </q-item>
+
               <!-- Config 3 -->
               <q-item tag="label" v-ripple>
                 <q-item-section>

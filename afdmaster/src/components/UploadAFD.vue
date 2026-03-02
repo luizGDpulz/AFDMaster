@@ -146,7 +146,7 @@ export default defineComponent({
         }
 
         // Validação em Bulk
-        validators.validateBulk(records, portaria, store.settings.checkNsrSequential)
+        validators.validateBulk(records, portaria, store.settings)
 
         // Salva na Store
         store.loadParsedRecords(records, portaria, lines, fileName)
@@ -193,11 +193,16 @@ export default defineComponent({
          isProcessing.value = false
       }
 
+      // FileReader.readAsText() é assíncrono e dispara `onload` SOMENTE após
+      // o arquivo inteiro ter sido lido (EOF garantido pelo browser).
+      // O setTimeout(50ms) abaixo apenas libera o event loop para renderizar o
+      // spinner antes do JS pesado de parsing travar a thread.
       reader.readAsText(selectedFile.value)
     }
 
     return {
       isProcessing,
+      isFinished,
       isDragging,
       selectedFile,
       fileInputRef,

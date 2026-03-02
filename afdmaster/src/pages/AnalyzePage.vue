@@ -1,7 +1,7 @@
 <template>
   <q-page class="fade-in q-pa-lg">
     <!-- Header/Toolbar -->
-    <div class="row items-center q-pa-md soft-card bg-surface q-mb-lg" style="border-radius: 16px;">
+    <div class="row items-center q-mb-md">
       <div class="text-h5 text-weight-bold row items-center">
         <q-icon name="analytics" class="q-mr-sm text-primary" /> Analisar AFD
       </div>
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Data State -->
-    <div v-else class="q-px-md">
+    <div v-else>
       <q-card flat bordered class="soft-card">
         <q-tabs
           v-model="tab"
@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, watch } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useQuasar } from 'quasar'
 import { useGenerator } from 'src/composables/useGenerator'
@@ -112,6 +112,13 @@ export default defineComponent({
   setup() {
     const store = useAfdStore()
     const tab = ref('records')
+    
+    // Mapeamento para o Breadcrumb do Layout
+    const tabLabels = { records: 'Registros', validation: 'Validações', export: 'Exportar' }
+    watch(tab, (newVal) => {
+       store.activeTabName = tabLabels[newVal]
+    }, { immediate: true })
+
     const uploadModal = ref(false)
     const $q = useQuasar()
     const { generateFileContent } = useGenerator()
