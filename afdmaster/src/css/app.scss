@@ -294,6 +294,7 @@ body {
 
 .q-page-container {
     background: var(--qm-bg-secondary) !important;
+    overflow: hidden !important;
 }
 
 // ===== DARK MODE QUASAR OVERRIDES =====
@@ -414,6 +415,27 @@ body {
             color: var(--qm-error) !important;
         }
     }
+}
+
+// ===== ROUNDED PILL BUTTONS =====
+.rounded-sm {
+    border-radius: 4px !important;
+}
+
+.rounded-md {
+    border-radius: 8px !important;
+}
+
+.rounded-lg {
+    border-radius: 12px !important;
+}
+
+.rounded-xl {
+    border-radius: 18px !important;
+}
+
+.rounded-pill {
+    border-radius: 9999px !important;
 }
 
 // ===== ROW DETAIL PANEL (AfdTable) =====

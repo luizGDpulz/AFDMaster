@@ -91,7 +91,7 @@ export default defineComponent({
 .sidebar-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh; /* Permite que o container bata no chão da tela */
   padding: 1rem;
   background: transparent;
 }

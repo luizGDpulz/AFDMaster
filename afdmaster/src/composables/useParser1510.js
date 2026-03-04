@@ -45,6 +45,13 @@ export function useParser1510() {
             }
 
             try {
+                // REP Hardware Trailer Check (MTE 1510/671 standard)
+                if (line.startsWith('999999999')) {
+                    record.tipo = '9' // Força o tipo para o padrão visual
+                    records.push(record)
+                    return records // Interrompe a leitura ignorando lixo abaixo do trailer
+                }
+
                 switch (tipo) {
                     case '1': // Cabeçalho
                         if (line.length >= 21) {
@@ -99,9 +106,7 @@ export function useParser1510() {
                     case '5': // Inclusão/Exclusão Funcionario
                         break;
                     default:
-                        if (tipo !== '9') { // 9 é trailer
-                            record.erros.push(`Tipo de registro desconhecido: ${tipo}`)
-                        }
+                        record.erros.push(`Tipo de registro desconhecido: ${tipo}`)
                         break;
                 }
             } catch {

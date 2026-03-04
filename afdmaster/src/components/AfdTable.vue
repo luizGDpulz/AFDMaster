@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md">
+  <div class="q-pa-md" ref="rootRef">
     <div v-if="!store.hasRecords" class="text-center q-pa-xl text-grey-6">
       <q-icon name="warning" size="48px" />
       <div class="text-h6 q-mt-md">Nenhum dado importado.</div>
@@ -8,7 +8,7 @@
 
     <div v-else>
 
-      <div class="row items-center q-mb-sm q-col-gutter-sm">
+      <div class="row items-center q-mb-xs q-col-gutter-sm">
         <div class="col-12 col-md-3">
            <q-select
               dense outlined
@@ -44,16 +44,18 @@
 
       <q-table
         flat bordered
-        :rows="filteredRecords"
+        :rows="store.records"
         :columns="columns"
         row-key="id"
-        :filter="filter"
-        :filter-method="filterMethod"
+        :filter="filterTrigger"
+        :filter-method="customFilterMethod"
         virtual-scroll
         :virtual-scroll-item-size="48"
         :virtual-scroll-sticky-size-start="48"
+        v-model:pagination="pagination"
         :rows-per-page-options="[0]"
-        style="height: 65vh"
+        ref="qTableRef"
+        :style="{ height: tableHeight + 'px' }"
         table-style="table-layout: fixed; width: 100%;"
         class="soft-card sticky-header-table"
         title="Registros do Arquivo"
@@ -64,9 +66,8 @@
           <q-tr
             :props="props"
             :key="props.key"
-            @click="toggleRow(props.row)"
-            class="table-row"
-            :class="{ 'row-expanded': expandedIds.has(props.row.id) }"
+            @click="openRecordDetail(props.row)"
+            class="table-row cursor-pointer"
           >
              <q-td v-for="col in props.cols" :key="col.name" :props="props">
                 <!-- Customizações de Célula -->
@@ -101,97 +102,23 @@
              </q-td>
           </q-tr>
 
-          <!-- Linha Expandida (Inline Panel) -->
-          <q-tr v-if="expandedIds.has(props.row.id)" :props="props" :key="`exp-${props.key}`" class="expansion-row">
-            <q-td colspan="100%" class="expansion-cell">
-              <div class="expansion-panel">
-                
-                <div class="exp-header">
-                  <RecordTypeBadge :tipo="props.row.tipo" />
-                  <q-chip v-if="props.row.tipo === '5'" :color="operacaoColor(props.row.operacao)" text-color="white" icon="person" size="sm" class="q-ml-sm" dense>{{ operacaoLabel(props.row.operacao) }}</q-chip>
-                  <span class="text-caption text-grey-5 q-ml-sm">NSR #{{ props.row.nsr }}</span>
-                  <q-space />
-                  <q-btn icon="close" flat round dense size="sm" @click.stop="toggleRow(props.row)" />
-                </div>
-
-                <!-- Campos tipo 5 -->
-                <div v-if="props.row.tipo === '5'" class="exp-grid">
-                  <div class="exp-field">
-                    <div class="exp-label">Nome do Empregado</div>
-                    <div class="exp-value text-weight-bold">{{ props.row.nomeEmpregado || '—' }}</div>
-                  </div>
-                  <div class="exp-field">
-                    <div class="exp-label">CPF do Empregado</div>
-                    <div class="exp-value text-mono">{{ formatCPF(props.row.cpf) }}</div>
-                  </div>
-                  <div class="exp-field" v-if="props.row.dataHora">
-                    <div class="exp-label">Data / Hora</div>
-                    <div class="exp-value">{{ formatDateTime(props.row.dataHora) }}</div>
-                  </div>
-                  <div class="exp-field" v-if="props.row.fusoHorario">
-                    <div class="exp-label">Fuso Horário</div>
-                    <div class="exp-value"><span class="fuso-chip">{{ formatFuso(props.row.fusoHorario) }}</span></div>
-                  </div>
-                  <div class="exp-field">
-                    <div class="exp-label">CPF Responsável</div>
-                    <div class="exp-value text-mono">{{ formatCPF(props.row.cpfResponsavel) || '—' }}</div>
-                  </div>
-                  <div class="exp-field" v-if="props.row.demaisDados">
-                    <div class="exp-label">Demais Dados</div>
-                    <div class="exp-value text-mono">{{ props.row.demaisDados }}</div>
-                  </div>
-                  <div class="exp-field" v-if="props.row.crc">
-                    <div class="exp-label">CRC-16</div>
-                    <div class="exp-value text-mono text-grey-6">{{ props.row.crc }}</div>
-                  </div>
-                </div>
-
-                <!-- Campos genéricos -->
-                <div v-else class="exp-grid">
-                  <div class="exp-field" v-if="props.row.dataHora">
-                    <div class="exp-label">Data / Hora</div>
-                    <div class="exp-value">{{ formatDateTime(props.row.dataHora) }}</div>
-                  </div>
-                  <div class="exp-field" v-if="props.row.fusoHorario">
-                    <div class="exp-label">Fuso Horário</div>
-                    <div class="exp-value"><span class="fuso-chip">{{ formatFuso(props.row.fusoHorario) }}</span></div>
-                  </div>
-                  <div class="exp-field" v-if="props.row.cpf || props.row.pis">
-                    <div class="exp-label">CPF / PIS</div>
-                    <div class="exp-value text-mono">{{ formatCPF(props.row.cpf || props.row.pis) }}</div>
-                  </div>
-                  <div class="exp-field" v-if="props.row.crc">
-                    <div class="exp-label">CRC-16</div>
-                    <div class="exp-value text-mono text-grey-6">{{ props.row.crc }}</div>
-                  </div>
-                  <div class="exp-field" v-if="props.row.erros && props.row.erros.length > 0">
-                    <div class="exp-label">Erros</div>
-                    <div v-for="(e, i) in props.row.erros" :key="i" class="exp-value text-negative">{{ e }}</div>
-                  </div>
-                </div>
-
-                <!-- Linha raw -->
-                <div class="exp-raw">
-                  <span class="exp-label">Linha raw</span>
-                  <div class="raw-line text-mono">{{ props.row.raw }}</div>
-                </div>
-
-              </div>
-            </q-td>
-          </q-tr>
         </template>
       </q-table>
+
+      <!-- Modal de Detalhes de Registro (Substitui Expansão Inline) -->
+      <RecordDetailDialog v-model="isDetailOpen" :record="selectedRecord" />
 
     </div>
   </div>
 
 </template>
 <script>
-import { defineComponent, ref, computed } from 'vue'
+import { defineComponent, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useValidators } from 'src/composables/useValidators'
 import { useQuasar } from 'quasar'
 import RecordTypeBadge from 'src/components/RecordTypeBadge.vue'
+import RecordDetailDialog from 'src/components/RecordDetailDialog.vue'
 
 const OPERACAO_MAP = {
   'I': { label: 'Inclusão',  color: 'positive' },
@@ -201,31 +128,89 @@ const OPERACAO_MAP = {
 
 export default defineComponent({
   name: 'AfdTable',
-  components: { RecordTypeBadge },
+  components: { RecordTypeBadge, RecordDetailDialog },
   setup() {
     const store = useAfdStore()
     const { validateSingle, validateBulk } = useValidators()
     const $q = useQuasar()
 
-    // ── Expansão Inline Múltipla ──────────────────────────────────────────────
-    const expandedIds = ref(new Set())
+    const pagination = ref({ rowsPerPage: 0 })
 
-    const toggleRow = (row) => {
-      const newSet = new Set(expandedIds.value)
-      if (newSet.has(row.id)) {
-        newSet.delete(row.id)
-      } else {
-        newSet.add(row.id)
+    // ── Altura dinâmica da tabela ──────────────────────────────────────────
+    const qTableRef = ref(null)
+    const rootRef   = ref(null)
+    const tableHeight = ref(600)
+
+    const computeHeight = () => {
+      const root = rootRef.value
+      if (!root) return
+      
+      const containerTop = root.getBoundingClientRect().top
+      const available = window.innerHeight - containerTop - 24
+      
+      let filtersH = 44
+      const filtersEl = root.querySelector('.q-col-gutter-sm')
+      if (filtersEl && filtersEl.offsetHeight > 0) {
+        filtersH = filtersEl.offsetHeight + 8 
       }
-      expandedIds.value = newSet
+      
+      const newHeight = Math.max(200, Math.floor(available - 16 - filtersH))
+      
+      // Threshold check to prevent ResizeObserver infinite loops on virtual scroll jumps
+      if (Math.abs(tableHeight.value - newHeight) > 10) {
+          tableHeight.value = newHeight
+      }
+    }
+
+    let resizeObserver = null
+
+    onMounted(() => {
+      resizeObserver = new ResizeObserver(() => {
+        requestAnimationFrame(computeHeight)
+      })
+      if (rootRef.value) resizeObserver.observe(rootRef.value)
+      window.addEventListener('resize', computeHeight)
+      
+      // Fallbacks para garantir que a medida ocorra após montagem
+      setTimeout(computeHeight, 50)
+      setTimeout(computeHeight, 300)
+    })
+
+    onUnmounted(() => {
+      if (resizeObserver) resizeObserver.disconnect()
+      window.removeEventListener('resize', computeHeight)
+    })
+
+    // ── Gerenciamento do Modal de Detalhes ────────────────────────────────────
+    const isDetailOpen = ref(false)
+    const selectedRecord = ref({})
+
+    const openRecordDetail = (row) => {
+      selectedRecord.value = row
+      isDetailOpen.value = true
     }
 
     // ── Filtros ──────────────────────────────────────────────────────────────
-    const filter = ref('')
-    const showOnlyErrors = ref(false)
-    const tipoFiltro = ref(null)
-    const dataInicio = ref('')
-    const dataFim = ref('')
+    const filter = computed({
+      get: () => store.filters.search,
+      set: (val) => store.setFilters({ search: val })
+    })
+    const showOnlyErrors = computed({
+      get: () => store.filters.onlyErrors,
+      set: (val) => store.setFilters({ onlyErrors: val })
+    })
+    const tipoFiltro = computed({
+      get: () => store.filters.type,
+      set: (val) => store.setFilters({ type: val })
+    })
+    const dataInicio = computed({
+       get: () => store.filters.dateStart,
+       set: (val) => store.setFilters({ dateStart: val })
+    })
+    const dataFim = computed({
+       get: () => store.filters.dateEnd,
+       set: (val) => store.setFilters({ dateEnd: val })
+    })
 
     const tipoOptions = [
       { label: 'Todos os Registros', value: null },
@@ -239,7 +224,14 @@ export default defineComponent({
     ]
 
     const toggleErrorsFilter = () => {
-      showOnlyErrors.value = !showOnlyErrors.value
+      const isCurrentlyActive = showOnlyErrors.value
+      showOnlyErrors.value = !isCurrentlyActive
+      
+      // Quando o usuário desmarcar o botão "Somente Erros", 
+      // limpa a barra de pesquisa junto para fechar o Drill-down de vez
+      if (isCurrentlyActive) {
+        filter.value = ''
+      }
     }
 
     // ── Formatadores ─────────────────────────────────────────────────────────
@@ -289,49 +281,18 @@ export default defineComponent({
 
     const formatCPF = (cpf) => {
       if (!cpf) return '—'
-      const d = cpf.replace(/\D/g, '')
-      // O AFD 671 armazena CPF em 12 posições (zero à esquerda): normaliza para 11 dígitos
-      const digits = d.length === 12 ? d.replace(/^0+/, '') : d.replace(/^0+(?=\d{11})/, '')
+      const digits = cpf.replace(/\D/g, '')
       if (digits.length === 11) {
         return `${digits.substring(0,3)}.${digits.substring(3,6)}.${digits.substring(6,9)}-${digits.substring(9,11)}`
       }
-      return cpf // fallback: exibe como veio
-    }
-
-    /**
-     * Normaliza um CPF para dígitos limpos (sem zeros à esquerda).
-     * Usado na busca para comparar query contra campo independente do formato.
-     */
-    const normalizeCPF = (raw) => {
-      if (!raw) return ''
-      return raw.replace(/\D/g, '').replace(/^0+/, '')
-    }
-
-    /**
-     * Filter method customizado para a q-table.
-     * Suporta:
-     *  - Busca por NSR (numérico)
-     *  - Busca por CPF/PIS formatado (xxx.xxx.xxx-xx) OU apenas dígitos
-     *  - Busca por nome do empregado (tipo 5)
-     */
-    const filterMethod = (rows, terms) => {
-      if (!terms || !terms.trim()) return rows
-      const q = terms.trim()
-      const qLower = q.toLowerCase()
-      const qDigits = normalizeCPF(q) // somente dígitos sem zeros iniciais
-
-      return rows.filter(row => {
-        // NSR
-        if (String(row.nsr || '').includes(q)) return true
-        // CPF / PIS — compara dígitos normalizados
-        if (qDigits.length >= 3) {
-          const rowCpf = normalizeCPF(row.cpf || row.pis || '')
-          if (rowCpf.includes(qDigits)) return true
+      if (digits.length === 12) {
+        // CPF de 12 dígitos: remove leading zero se for 671 padding
+        const trimmed = digits.replace(/^0/, '')
+        if (trimmed.length === 11) {
+          return `${trimmed.substring(0,3)}.${trimmed.substring(3,6)}.${trimmed.substring(6,9)}-${trimmed.substring(9,11)}`
         }
-        // Nome empregado (tipo 5)
-        if (row.nomeEmpregado && row.nomeEmpregado.toLowerCase().includes(qLower)) return true
-        return false
-      })
+      }
+      return cpf // fallback
     }
 
     // ── Tipo 5 helpers ───────────────────────────────────────────────────────
@@ -341,40 +302,77 @@ export default defineComponent({
     // ── Dados ────────────────────────────────────────────────────────────────
     const headerRecord = computed(() => store.records.find(r => r.tipo === '1'))
 
-    const columns = [
+    const columns = computed(() => [
       { name: 'nsr',           label: 'NSR',       field: 'nsr',    sortable: true,  align: 'left',   style: 'width: 10%;', headerStyle: 'width: 10%;' },
       { name: 'tipo',          label: 'Tipo',      field: 'tipo',   sortable: true,  align: 'center', style: 'width: 10%;', headerStyle: 'width: 10%;' },
       { name: 'data',          label: 'Data',      field: 'data',   sortable: false, align: 'left',   style: 'width: 12%;', headerStyle: 'width: 12%;' },
       { name: 'hora',          label: 'Hora',      field: 'hora',   sortable: false, align: 'left',   style: 'width: 12%;', headerStyle: 'width: 12%;' },
       { name: 'fuso',          label: 'Fuso',      field: 'fuso',   sortable: false, align: 'center', style: 'width: 12%;', headerStyle: 'width: 12%;' },
-      { name: 'identificador', label: 'CPF / PIS', field: 'id',     sortable: true,  align: 'left',   style: 'width: 18%;', headerStyle: 'width: 18%;' },
+      { name: 'identificador', label: store.portaria === '1510' ? 'PIS' : 'CPF', field: 'id', sortable: true, align: 'left', style: 'width: 18%;', headerStyle: 'width: 18%;' },
       { name: 'crc',           label: 'CRC',       field: 'crc',    sortable: false, align: 'center', style: 'width: 14%;', headerStyle: 'width: 14%;' },
       { name: 'status',        label: 'Status',    field: 'status', align: 'center',                  style: 'width: 12%;', headerStyle: 'width: 12%;' },
-    ]
+    ])
 
-    const filteredRecords = computed(() => {
-      let recs = store.records
+    const normalizeCPF = (raw) => {
+      if (!raw) return ''
+      return raw.replace(/\D/g, '').replace(/^0+/, '')
+    }
 
-      if (showOnlyErrors.value) {
+    const activeFilters = computed(() => ({
+      search: filter.value,
+      onlyErrors: showOnlyErrors.value,
+      type: tipoFiltro.value,
+      dateStart: dataInicio.value,
+      dateEnd: dataFim.value
+    }))
+
+    // Gatilho infalível para forçar o Quasar a refiltrar a tabela:
+    // Concatena tudo num primitivo. Sempre que mudar, a QTable recarrega.
+    const filterTrigger = computed(() => {
+       return `${filter.value}|${showOnlyErrors.value}|${tipoFiltro.value}|${dataInicio.value}|${dataFim.value}`
+    })
+
+    const customFilterMethod = (rows) => {
+      let recs = rows
+      const filters = activeFilters.value
+
+      if (filters.onlyErrors) {
         recs = recs.filter(r => r.erros && r.erros.length > 0)
       }
 
-      if (tipoFiltro.value) {
-        recs = recs.filter(r => r.tipo === tipoFiltro.value)
+      if (filters.type) {
+        recs = recs.filter(r => r.tipo === filters.type)
       }
 
-      if (dataInicio.value) {
-        const d1 = new Date(dataInicio.value + 'T00:00:00').getTime()
+      if (filters.dateStart) {
+        const d1 = new Date(filters.dateStart + 'T00:00:00').getTime()
         recs = recs.filter(r => r.dataHora && new Date(r.dataHora).getTime() >= d1)
       }
 
-      if (dataFim.value) {
-        const d2 = new Date(dataFim.value + 'T23:59:59').getTime()
+      if (filters.dateEnd) {
+        const d2 = new Date(filters.dateEnd + 'T23:59:59').getTime()
         recs = recs.filter(r => r.dataHora && new Date(r.dataHora).getTime() <= d2)
       }
 
+      if (filters.search && filters.search.trim()) {
+         const q = filters.search.trim()
+         const qLower = q.toLowerCase()
+         const qDigits = normalizeCPF(q)
+
+         recs = recs.filter(row => {
+            if (String(row.nsr || '').includes(q)) return true
+            if (qDigits.length >= 3) {
+               const rowCpf = normalizeCPF(row.cpf || row.pis || '')
+               if (rowCpf.includes(qDigits)) return true
+            }
+            if (row.nomeEmpregado && row.nomeEmpregado.toLowerCase().includes(qLower)) return true
+            if (row.erros && row.erros.some(err => err.toLowerCase().includes(qLower))) return true
+            return false
+         })
+      }
+
       return recs
-    })
+    }
 
     // ── Edição ───────────────────────────────────────────────────────────────
     const saveField = (row, field, val) => {
@@ -396,6 +394,33 @@ export default defineComponent({
         validateBulk(store.records, store.portaria, store.settings.checkNsrSequential)
     }
 
+    /**
+     * Formata CNPJ (14 dígitos) ou CPF (11 dígitos) de acordo com o flag.
+     * flag === '1' → CNPJ: XX.XXX.XXX/XXXX-XX
+     * flag === '2' → CPF: XXX.XXX.XXX-XX
+     */
+    const formatCNPJ14 = (raw, flag) => {
+      if (!raw) return '—'
+      const d = raw.replace(/\D/g, '')
+      if (flag === '2' && d.length >= 11) {
+        const c = d.slice(-11)
+        return `${c.substring(0,3)}.${c.substring(3,6)}.${c.substring(6,9)}-${c.substring(9,11)}`
+      }
+      if (d.length >= 14) {
+        return `${d.substring(0,2)}.${d.substring(2,5)}.${d.substring(5,8)}/${d.substring(8,12)}-${d.substring(12,14)}`
+      }
+      return raw
+    }
+
+    /**
+     * Formata data no formato AAAA-MM-dd → DD/MM/AAAA.
+     */
+    const formatDate = (dateStr) => {
+      if (!dateStr || dateStr.length < 10) return '—'
+      const [y, m, dd] = dateStr.split('-')
+      return `${dd}/${m}/${y}`
+    }
+
     return {
       store,
       filter,
@@ -406,26 +431,38 @@ export default defineComponent({
       tipoOptions,
       toggleErrorsFilter,
       columns,
-      filteredRecords,
       headerRecord,
-      expandedIds,
-      toggleRow,
+      isDetailOpen,
+      selectedRecord,
+      openRecordDetail,
       formatDateTime,
       formatDataStr,
       formatHoraStr,
       formatFuso,
       formatCPF,
-      filterMethod,
+      formatCNPJ14,
+      formatDate,
+      filterTrigger,
+      customFilterMethod,
       operacaoLabel,
       operacaoColor,
       saveField,
       saveFieldId,
+      qTableRef,
+      rootRef,
+      tableHeight,
+      pagination
     }
   }
 })
 </script>
 
+
 <style scoped>
+.q-pa-md {
+  padding: 19px 16px;
+}
+
 /* ── Sticky Header ─────────────────────────────────────────────────────── */
 .sticky-header-table :deep(thead tr th) {
   position: sticky;

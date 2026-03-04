@@ -1,7 +1,7 @@
 <template>
-  <q-page class="fade-in q-pa-lg">
+  <q-page class="fade-in q-px-lg q-pt-sm q-pb-xs column">
     <!-- Header/Toolbar -->
-    <div class="row items-center q-mb-md">
+    <div class="row items-center q-mb-sm">
       <div class="text-h5 text-weight-bold row items-center">
         <q-icon name="analytics" class="q-mr-sm text-primary" /> Analisar AFD
       </div>
@@ -31,15 +31,15 @@
         <q-tabs
           v-model="tab"
           dense
-          class="text-grey"
+          class="text-grey q-my-sm"
           active-color="primary"
           indicator-color="primary"
           align="left"
           narrow-indicator
         >
-          <q-tab name="records" icon="table_view" label="Registros" />
-          <q-tab name="validation" icon="rule" label="Validações" />
-          <q-tab name="export" icon="file_download" label="Exportar" />
+          <q-tab name="records" class="rounded-pill q-mx-sm" icon="table_view" label="Registros" />
+          <q-tab name="validation" class="rounded-pill q-mx-sm" icon="rule" label="Validações" />
+          <q-tab name="export" class="rounded-pill q-mx-sm" icon="file_download" label="Exportar" />
         </q-tabs>
 
         <q-separator />
@@ -52,7 +52,7 @@
 
           <!-- Aba Validações -->
           <q-tab-panel name="validation">
-            <ValidationReport />
+            <ValidationReport @filter-error="handleFilterError" />
           </q-tab-panel>
 
           <!-- Aba Exportar -->
@@ -82,7 +82,7 @@
 
     <!-- Upload Modal -->
     <q-dialog v-model="uploadModal">
-       <q-card style="min-width: 400px" class="soft-card">
+       <q-card style="min-width: 400px" class="soft-card rounded-xl">
          <q-card-section class="row items-center q-pb-none">
            <div class="text-h6">Selecione o AFD</div>
            <q-space />
@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, watch } from 'vue'
+import { defineComponent, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useQuasar } from 'quasar'
 import { useGenerator } from 'src/composables/useGenerator'
@@ -122,6 +122,15 @@ export default defineComponent({
     const uploadModal = ref(false)
     const $q = useQuasar()
     const { generateFileContent } = useGenerator()
+
+    const handleFilterError = (errorMsg) => {
+       store.setFilters({
+          search: errorMsg,
+          onlyErrors: true,
+          type: null // Remove qualquer filtro de tipo ativo para não bloquear resultados
+       })
+       tab.value = 'records'
+    }
 
     const onFileProcessingStart = () => {
       // Don't close the modal yet, just notify so the user knows it's doing something
@@ -153,13 +162,24 @@ export default defineComponent({
        }
     }
 
+    onMounted(() => {
+      document.documentElement.style.overflow = 'hidden'
+      document.body.style.overflow = 'hidden'
+    })
+
+    onUnmounted(() => {
+      document.documentElement.style.overflow = ''
+      document.body.style.overflow = ''
+    })
+
     return {
       store,
       tab,
       uploadModal,
       onFileProcessingStart,
       onFileProcessed,
-      downloadFile
+      downloadFile,
+      handleFilterError
     }
   }
 })

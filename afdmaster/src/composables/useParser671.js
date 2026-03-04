@@ -63,6 +63,21 @@ export function useParser671() {
             }
 
             try {
+                // REP Hardware Trailer Check (MTE 1510/671 standard)
+                if (line.startsWith('999999999')) {
+                    record.tipo = '9' // Força o tipo para visualização
+
+                    if (line.length >= 18) record.qtdTipo2 = parseInt(line.substring(9, 18), 10) || 0
+                    if (line.length >= 27) record.qtdTipo3 = parseInt(line.substring(18, 27), 10) || 0
+                    if (line.length >= 36) record.qtdTipo4 = parseInt(line.substring(27, 36), 10) || 0
+                    if (line.length >= 45) record.qtdTipo5 = parseInt(line.substring(36, 45), 10) || 0
+                    if (line.length >= 54) record.qtdTipo6 = parseInt(line.substring(45, 54), 10) || 0
+                    if (line.length >= 63) record.qtdTipo7 = parseInt(line.substring(54, 63), 10) || 0
+
+                    records.push(record)
+                    return records // Corta a leitura para ignorar assinatura digital lixo no fim do arquivo
+                }
+
                 switch (tipo) {
 
                     // ── Tipo 1: Cabeçalho ─────────────────────────────────
@@ -74,14 +89,34 @@ export function useParser671() {
                     // 254 flag fabricante | 255-268 CNPJ/CPF fab (14)
                     // 269-298 Modelo (30) | 299-302 CRC (4)
                     case '1':
-                        record.empregadorCnpjCpf = line.substring(11, 25).trim()     // pos 012-025
-                        record.empregadorNome = line.substring(39, 189).trim()    // pos 040-189
-                        // DH de geração: pos 227-250
+                        // pos 011 – Flag CNPJ(1) / CPF(2) do empregador
+                        record.flagCNPJ = line.substring(10, 11)
+                        // pos 012-025 – CNPJ ou CPF do empregador (14 chars)
+                        record.empregadorCnpjCpf = line.substring(11, 25).trim()
+                        // pos 026-039 – CNO ou CAEPF (14 chars)
+                        if (line.length >= 39) record.cnoCapef = line.substring(25, 39).trim()
+                        // pos 040-189 – Razão social / nome do empregador (150 chars)
+                        record.empregadorNome = line.substring(39, 189).trim()
+                        // pos 190-206 – Número de fabricação REP-C / Nº acordo coletivo / Nº INPI (17 chars)
+                        if (line.length >= 206) record.nroFabricacao = line.substring(189, 206).trim()
+                        // pos 207-216 – Data inicial dos registros (10 chars, formato AAAA-MM-dd)
+                        if (line.length >= 216) record.dataInicial = line.substring(206, 216).trim()
+                        // pos 217-226 – Data final dos registros (10 chars, formato AAAA-MM-dd)
+                        if (line.length >= 226) record.dataFinal = line.substring(216, 226).trim()
+                        // pos 227-250 – Data e hora da geração (24 chars, DH)
                         if (line.length >= 250) {
                             const dh = line.substring(226, 250)
                             record.dataHora = dhToISO(dh)
                             record.fusoHorario = dh.length >= 24 ? dh.substring(19) : null
                         }
+                        // pos 251-253 – Campo fixo "003"
+                        // pos 254 – Flag CNPJ(1) / CPF(2) do fabricante
+                        if (line.length >= 254) record.flagFabricante = line.substring(253, 254)
+                        // pos 255-268 – CNPJ ou CPF do fabricante/desenvolvedor (14 chars)
+                        if (line.length >= 268) record.cnpjFabricante = line.substring(254, 268).trim()
+                        // pos 269-298 – Modelo do REP-C (30 chars)
+                        if (line.length >= 298) record.modelo = line.substring(268, 298).trim()
+                        // pos 299-302 – CRC-16 (4 chars hexa)
                         if (line.length >= 302) record.crc = line.substring(298, 302)
                         break
 
@@ -98,8 +133,11 @@ export function useParser671() {
                             record.fusoHorario = dh.length >= 24 ? dh.substring(19) : null
                         }
                         if (line.length >= 48) record.cpf = line.substring(34, 48).trim()  // CPF responsável
+                        if (line.length >= 49) record.flagCNPJ = line.substring(48, 49)    // flag CNPJ/CPF
                         if (line.length >= 63) record.empregadorCnpjCpf = line.substring(49, 63).trim() // pos 050-063
+                        if (line.length >= 77) record.cnoCapef = line.substring(63, 77).trim() // pos 064-077
                         if (line.length >= 227) record.empregadorNome = line.substring(77, 227).trim() // pos 078-227
+                        if (line.length >= 327) record.local = line.substring(227, 327).trim() // pos 228-327
                         if (line.length >= 331) record.crc = line.substring(327, 331)
                         break
 
@@ -192,12 +230,6 @@ export function useParser671() {
                         if (line.length >= 72) record.idColetor = line.substring(70, 72).trim()
                         if (line.length >= 73) record.online = line.substring(72, 73) === '0' ? 'Online' : 'Offline'
                         if (line.length >= 137) record.hashSHA256 = line.substring(73, 137).trim()
-                        break
-
-                    // ── Tipo 9: Trailer ───────────────────────────────────
-                    // Pos 001-009 "999999999" | 010-018 Qtd tipo 2 | ...
-                    case '9':
-                        // Sem dados de data/hora — apenas contadores
                         break
 
                     default:

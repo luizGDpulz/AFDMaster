@@ -17,47 +17,47 @@
       />
     </q-drawer>
 
+    <!-- ===== HEADER / TOPBAR ===== -->
+    <q-header class="main-header">
+      <div class="header-left">
+        <!-- Botão Menu Mobile -->
+        <q-btn
+          flat
+          round
+          dense
+          icon="menu"
+          class="menu-btn"
+          @click="sidebarOpen = !sidebarOpen"
+        />
+        
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumbs">
+          <span class="breadcrumb-item">AFDMaster</span>
+          <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
+          <span class="breadcrumb-current">{{ currentPageTitle }}</span>
+          <template v-if="currentPageTitle === 'Analisar AFD' && store.activeTabName">
+             <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
+             <span class="breadcrumb-current text-primary">{{ store.activeTabName }}</span>
+          </template>
+        </nav>
+      </div>
+
+      <div class="header-right">
+        <!-- Botões de Ação Rápida -->
+        <q-btn
+          v-if="hasRecords"
+          unelevated
+          class="soft-btn soft-btn-primary"
+          icon="file_download"
+          label="Exportar"
+          to="/export"
+        />
+      </div>
+    </q-header>
+
     <!-- ===== CONTEÚDO PRINCIPAL ===== -->
     <q-page-container class="page-container">
       
-      <!-- Header / Topbar -->
-      <header class="main-header">
-        <div class="header-left">
-          <!-- Botão Menu Mobile -->
-          <q-btn
-            flat
-            round
-            dense
-            icon="menu"
-            class="menu-btn"
-            @click="sidebarOpen = !sidebarOpen"
-          />
-          
-          <!-- Breadcrumbs -->
-          <nav class="breadcrumbs">
-            <span class="breadcrumb-item">AFDMaster</span>
-            <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
-            <span class="breadcrumb-current">{{ currentPageTitle }}</span>
-            <template v-if="currentPageTitle === 'Analisar AFD' && store.activeTabName">
-               <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
-               <span class="breadcrumb-current text-primary">{{ store.activeTabName }}</span>
-            </template>
-          </nav>
-        </div>
-
-        <div class="header-right">
-          <!-- Botões de Ação Rápida -->
-          <q-btn
-            v-if="hasRecords"
-            unelevated
-            class="soft-btn soft-btn-primary"
-            icon="file_download"
-            label="Exportar"
-            to="/export"
-          />
-        </div>
-      </header>
-
       <!-- Página -->
       <router-view />
       

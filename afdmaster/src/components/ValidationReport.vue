@@ -41,13 +41,22 @@
               </q-card-section>
               <q-card-section>
                 <q-list separator>
-                  <q-item v-for="(count, errorMsg) in aggregatedErrors" :key="errorMsg">
+                  <q-item 
+                    v-for="(count, errorMsg) in aggregatedErrors" 
+                    :key="errorMsg"
+                    clickable
+                    v-ripple
+                    @click="$emit('filter-error', errorMsg)"
+                  >
                      <q-item-section>
                        <q-item-label>{{ errorMsg }}</q-item-label>
                      </q-item-section>
                      <q-item-section side>
                        <q-badge color="negative" class="text-weight-bold" :label="count + ' ocorrência(s)'" />
                      </q-item-section>
+                     <q-tooltip class="bg-dark text-body2">
+                        Clique para visualizar os registros com este erro
+                     </q-tooltip>
                   </q-item>
                 </q-list>
               </q-card-section>
@@ -73,6 +82,7 @@ import { useAfdStore } from 'src/stores/afdStore'
 
 export default defineComponent({
   name: 'ValidationReport',
+  emits: ['filter-error'],
   setup() {
     const store = useAfdStore()
 

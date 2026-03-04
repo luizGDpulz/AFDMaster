@@ -23,6 +23,14 @@ export const useAfdStore = defineStore('afd', {
             reindexNsrExport: false,
             checkDuplicates: true,
             duplicateToleranceMinutes: 5
+        },
+        // Form Filters globais para cross-component routing
+        filters: {
+            search: '',
+            onlyErrors: false,
+            type: null,
+            dateStart: '',
+            dateEnd: ''
         }
     }),
 
@@ -68,6 +76,10 @@ export const useAfdStore = defineStore('afd', {
 
         updateSettings(newSettings) {
             this.settings = { ...this.settings, ...newSettings }
+        },
+
+        setFilters(newFilters) {
+            this.filters = { ...this.filters, ...newFilters }
         }
     }
 })
