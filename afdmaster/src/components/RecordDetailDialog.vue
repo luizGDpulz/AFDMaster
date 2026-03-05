@@ -1,11 +1,17 @@
 <template>
-  <q-dialog v-model="open" @hide="$emit('update:modelValue', false)">
-    <q-card style="min-width: 480px; max-width: 600px; border-radius: 24px;" class="soft-card">
+  <q-dialog v-model="open" @hide="$emit('update:modelValue', false)" :seamless="isChild">
+    <q-card style="min-width: 480px; max-width: 600px; border-radius: 24px; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);"
+            :style="[
+               isChild ? 'transform: translateX(260px);' : '',
+               (!isChild && (conflictModalOpen || dayModalOpen)) ? 'transform: translateX(-260px);' : ''
+            ]"
+            class="soft-card shadow-12">
       <!-- Header -->
       <q-card-section class="row items-center q-pb-none">
         <div class="row items-center q-gutter-sm">
           <RecordTypeBadge :tipo="record.tipo" />
-          <span class="text-h6 text-weight-bold">Detalhe do Registro</span>
+          <span class="text-h6 text-weight-bold" v-if="!isChild">Detalhe do Registro</span>
+          <span class="text-h6 text-weight-bold" v-else>Registro Conflitante</span>
         </div>
         <q-space />
         <q-btn icon="close" flat round dense v-close-popup />
@@ -25,6 +31,12 @@
                 <div class="detail-label">{{ record.flagCNPJ === '1' ? 'CNPJ' : 'CPF' }} Empregador</div>
                 <div class="detail-value text-mono">{{ formatCNPJ14(record.empregadorCnpjCpf, record.flagCNPJ) }}</div>
               </div>
+              <!-- CEI (1510) -->
+              <div class="detail-item" v-if="record.cei && !/^0+$/.test(record.cei)">
+                <div class="detail-label">CEI</div>
+                <div class="detail-value text-mono">{{ record.cei }}</div>
+              </div>
+              <!-- CNO/CAEPF (671) -->
               <div class="detail-item" v-if="record.cnoCapef && record.cnoCapef !== '00000000000000'">
                 <div class="detail-label">CNO / CAEPF</div>
                 <div class="detail-value text-mono">{{ record.cnoCapef }}</div>
@@ -46,7 +58,7 @@
                 <span class="fuso-chip">GMT{{ record.fusoHorario }}</span>
               </div>
               <div class="detail-item" v-if="record.nroFabricacao">
-                <div class="detail-label">Nº Fabricação</div>
+                <div class="detail-label">Nº Fabricação REP</div>
                 <div class="detail-value text-mono">{{ record.nroFabricacao }}</div>
               </div>
               <div class="detail-item" v-if="record.modelo">
@@ -65,6 +77,12 @@
                 <div class="detail-label text-negative">Erros de Validação</div>
                 <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
                   • {{ e }}
+                </div>
+              </div>
+              <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
+                <div class="detail-label text-warning-dark">Avisos</div>
+                <div v-for="(w, i) in record.avisos" :key="i" class="detail-value text-warning-dark text-weight-bold">
+                  • {{ w }}
                 </div>
               </div>
            </div>
@@ -91,6 +109,12 @@
                 <div class="detail-label">{{ record.flagCNPJ === '1' ? 'CNPJ' : 'CPF' }} Empregador</div>
                 <div class="detail-value text-mono">{{ formatCNPJ14(record.empregadorCnpjCpf, record.flagCNPJ) }}</div>
               </div>
+              <!-- CEI (1510) -->
+              <div class="detail-item" v-if="record.cei && !/^0+$/.test(record.cei)">
+                <div class="detail-label">CEI</div>
+                <div class="detail-value text-mono">{{ record.cei }}</div>
+              </div>
+              <!-- CNO/CAEPF (671) -->
               <div class="detail-item" v-if="record.cnoCapef && record.cnoCapef !== '00000000000000'">
                 <div class="detail-label">CNO / CAEPF</div>
                 <div class="detail-value text-mono">{{ record.cnoCapef }}</div>
@@ -121,6 +145,13 @@
                   • {{ e }}
                 </div>
               </div>
+              <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
+                <div class="detail-label text-warning-dark">Avisos</div>
+                <div v-for="(w, i) in record.avisos" :key="i" class="detail-value text-warning-dark text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                  <span class="q-pr-sm">• {{ w.msg || w }}</span>
+                  <q-btn v-if="w.conflitoNsr" size="sm" color="warning" text-color="black" outline label="Ver conflitante" dense flat @click="viewConflict(w.conflitoNsr)" />
+                </div>
+              </div>
            </div>
         </q-card-section>
         
@@ -130,6 +161,107 @@
           <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">
             {{ record.raw }}
           </div>
+        </q-card-section>
+      </template>
+
+      <!-- Tipo 3: Marcação de Ponto -->
+      <template v-else-if="record.tipo === '3'">
+        <q-card-section class="q-pt-md">
+          <div class="detail-grid">
+            <div class="detail-item" v-if="record.ordemPar">
+              <div class="detail-label">Marcação</div>
+              <div>
+                <q-chip :color="record.ordemPar.startsWith('Entrada') ? 'green-2' : 'orange-2'" text-color="black" class="text-weight-bold shadow-1" style="margin: 0;" dense size="14px">
+                  {{ record.ordemPar }}
+                </q-chip>
+              </div>
+              <div class="q-mt-sm">
+                 <q-btn outline color="primary" size="sm" class="full-width soft-btn" icon="list" label="Marcações do dia" @click="viewDayPunches(record)" />
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">{{ identificadorLabel }}</div>
+              <div class="detail-value text-mono">{{ formatPIS(record.cpf || record.pis) || '—' }}</div>
+            </div>
+            <div class="detail-item" v-if="record.dataHora">
+              <div class="detail-label">Data</div>
+              <div class="detail-value">{{ formatDate(record.dataHora ? record.dataHora.substring(0,10) : null) }}</div>
+            </div>
+            <div class="detail-item" v-if="record.dataHora">
+              <div class="detail-label">Hora</div>
+              <div class="detail-value text-mono text-weight-bold">{{ record.dataHora ? record.dataHora.substring(11,16) : '—' }}</div>
+            </div>
+            <div class="detail-item" v-if="record.fusoHorario">
+              <div class="detail-label">Fuso Horário</div>
+              <span class="fuso-chip">GMT{{ record.fusoHorario }}</span>
+            </div>
+            <div class="detail-item" v-if="record.crc">
+              <div class="detail-label">CRC-16</div>
+              <div class="detail-value text-mono text-grey-7">{{ record.crc }}</div>
+            </div>
+            <div class="detail-item" v-if="record.erros && record.erros.length > 0">
+              <div class="detail-label text-negative">Erros de Validação</div>
+              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
+                • {{ e }}
+              </div>
+            </div>
+            <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
+              <div class="detail-label text-warning-dark">Avisos</div>
+              <div v-for="(w, i) in record.avisos" :key="i" class="detail-value text-warning-dark text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ w.msg || w }}</span>
+                <q-btn v-if="w.conflitoNsr" size="sm" color="warning" text-color="black" outline label="Ver conflitante" dense flat @click="viewConflict(w.conflitoNsr)" />
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <div class="detail-label q-mb-xs">Linha raw</div>
+          <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">{{ record.raw }}</div>
+        </q-card-section>
+      </template>
+
+      <!-- Tipo 4: Ajuste de Relógio -->
+      <template v-else-if="record.tipo === '4'">
+        <q-card-section class="q-pt-md">
+          <div class="detail-grid">
+            <div class="detail-item" v-if="record.dataHora">
+              <div class="detail-label">Data/Hora Antes do Ajuste</div>
+              <div class="detail-value">{{ formatDateTime(record.dataHora) }}</div>
+            </div>
+            <div class="detail-item" v-if="record.dataHoraAjuste">
+              <div class="detail-label">Data/Hora Ajustada</div>
+              <div class="detail-value text-weight-bold">{{ formatDateTime(record.dataHoraAjuste) }}</div>
+            </div>
+            <div class="detail-item" v-if="record.fusoHorario">
+              <div class="detail-label">Fuso Horário</div>
+              <span class="fuso-chip">GMT{{ record.fusoHorario }}</span>
+            </div>
+            <div class="detail-item" v-if="record.cpf">
+              <div class="detail-label">CPF Responsável</div>
+              <div class="detail-value text-mono">{{ formatCPF(record.cpf) }}</div>
+            </div>
+            <div class="detail-item" v-if="record.crc">
+              <div class="detail-label">CRC-16</div>
+              <div class="detail-value text-mono text-grey-7">{{ record.crc }}</div>
+            </div>
+            <div class="detail-item" v-if="record.erros && record.erros.length > 0">
+              <div class="detail-label text-negative">Erros de Validação</div>
+              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
+                • {{ e }}
+              </div>
+            </div>
+            <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
+              <div class="detail-label text-warning-dark">Avisos</div>
+              <div v-for="(w, i) in record.avisos" :key="i" class="detail-value text-warning-dark text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ w.msg || w }}</span>
+                <q-btn v-if="w.conflitoNsr" size="sm" color="warning" text-color="black" outline label="Ver conflitante" dense flat @click="viewConflict(w.conflitoNsr)" />
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <div class="detail-label q-mb-xs">Linha raw</div>
+          <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">{{ record.raw }}</div>
         </q-card-section>
       </template>
 
@@ -239,6 +371,14 @@
               </div>
             </div>
 
+            <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
+              <div class="detail-label text-warning-dark">Avisos</div>
+              <div v-for="(w, i) in record.avisos" :key="i" class="detail-value text-warning-dark text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ w.msg || w }}</span>
+                <q-btn v-if="w.conflitoNsr" size="sm" color="warning" text-color="black" outline label="Ver conflitante" dense flat @click="viewConflict(w.conflitoNsr)" />
+              </div>
+            </div>
+
           </div>
         </q-card-section>
 
@@ -251,7 +391,7 @@
         </q-card-section>
       </template>
 
-      <!-- Outros tipos: exibe campos genéricos disponíveis -->
+      <!-- Outros tipos: exibe campos genéricos disponíveis (tipos 6, 7, etc.) -->
       <template v-else>
         <q-card-section>
           <div class="detail-grid">
@@ -271,7 +411,7 @@
             </div>
             <div class="detail-item" v-if="record.cpf || record.pis">
               <div class="detail-label">{{ identificadorLabel }}</div>
-              <div class="detail-value text-mono">{{ formatCPF(record.cpf || record.pis) }}</div>
+              <div class="detail-value text-mono">{{ formatPIS(record.cpf || record.pis) }}</div>
             </div>
             <div class="detail-item" v-if="record.crc">
               <div class="detail-label">CRC-16</div>
@@ -283,6 +423,14 @@
                 • {{ e }}
               </div>
             </div>
+            
+            <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
+              <div class="detail-label text-warning-dark">Avisos</div>
+              <div v-for="(w, i) in record.avisos" :key="i" class="detail-value text-warning-dark text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ w.msg || w }}</span>
+                <q-btn v-if="w.conflitoNsr" size="sm" color="warning" text-color="black" outline label="Ver conflitante" dense flat @click="viewConflict(w.conflitoNsr)" />
+              </div>
+            </div>
           </div>
           <div class="detail-label q-mb-xs q-mt-md">Linha raw</div>
           <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">
@@ -292,10 +440,49 @@
       </template>
     </q-card>
   </q-dialog>
+
+  <!-- Modal Secundário para Marcação Conflitante -->
+  <q-dialog v-model="conflictModalOpen" position="center" seamless>
+    <RecordDetailDialog :model-value="conflictModalOpen" @update:model-value="val => conflictModalOpen = val" :record="conflictingRecord" is-child />
+  </q-dialog>
+
+  <!-- Modal Secundário para Marcações do Dia -->
+  <q-dialog v-model="dayModalOpen" position="center" seamless>
+    <q-card style="min-width: 480px; max-width: 600px; border-radius: 24px; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); transform: translateX(260px);" class="soft-card shadow-12">
+      <q-card-section class="row items-center q-pb-none">
+        <div class="row items-center q-gutter-sm">
+          <q-icon name="today" size="sm" color="primary" />
+          <span class="text-h6 text-weight-bold">Marcações do Dia</span>
+        </div>
+        <q-space />
+        <q-btn icon="close" flat round dense v-close-popup />
+      </q-card-section>
+      <q-separator class="q-mt-sm" />
+      
+      <q-card-section class="q-pa-md bg-grey-1" style="max-height: 60vh; overflow-y: auto;">
+         <q-list separator class="bg-white rounded-borders shadow-1">
+            <q-item v-for="(punch, idx) in dayPunches" :key="idx" clickable v-ripple>
+               <q-item-section avatar>
+                  <q-chip :color="punch.ordemPar && punch.ordemPar.startsWith('Entrada') ? 'green-2' : 'orange-2'" text-color="black" size="sm" class="text-weight-bold shadow-1">
+                     {{ punch.ordemPar || '?' }}
+                  </q-chip>
+               </q-item-section>
+               <q-item-section>
+                  <q-item-label class="text-weight-bold text-mono">{{ punch.dataHora ? punch.dataHora.substring(11, 16) : '—' }}</q-item-label>
+                  <q-item-label caption>{{ formatDate(punch.dataHora ? punch.dataHora.substring(0, 10) : '') }} <span v-if="punch.fusoHorario">GMT{{ punch.fusoHorario }}</span></q-item-label>
+               </q-item-section>
+               <q-item-section side>
+                  <q-badge color="grey-3" text-color="grey-8">NSR: {{ punch.nsr }}</q-badge>
+               </q-item-section>
+            </q-item>
+         </q-list>
+      </q-card-section>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, ref } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import RecordTypeBadge from 'src/components/RecordTypeBadge.vue'
 
@@ -305,7 +492,8 @@ export default defineComponent({
 
   props: {
     modelValue: { type: Boolean, default: false },
-    record: { type: Object, default: () => ({}) }
+    record: { type: Object, default: () => ({}) },
+    isChild: { type: Boolean, default: false }
   },
 
   emits: ['update:modelValue'],
@@ -318,6 +506,39 @@ export default defineComponent({
       get: () => props.modelValue,
       set: (val) => emit('update:modelValue', val)
     })
+
+    const conflictModalOpen = ref(false)
+    const conflictingRecord = ref({})
+
+    const viewConflict = (nsr) => {
+       if (!nsr) return
+       // Fechar day modal se estiver aberto para não sobrepor 2 modais filhos
+       dayModalOpen.value = false
+       const rec = store.records.find(r => String(r.nsr) === String(nsr))
+       if (rec) {
+          conflictingRecord.value = rec
+          setTimeout(() => { conflictModalOpen.value = true }, 50)
+       }
+    }
+
+    const dayModalOpen = ref(false)
+    const dayPunches = ref([])
+
+    const viewDayPunches = (rec) => {
+       if (!rec.dataHora) return
+       conflictModalOpen.value = false
+       const empId = rec.cpf || rec.pis
+       if (!empId) return
+       
+       const dateStr = rec.dataHora.substring(0, 10)
+       dayPunches.value = store.records.filter(r => 
+          r.tipo === '3' && 
+          (r.cpf === empId || r.pis === empId) && 
+          r.dataHora && r.dataHora.startsWith(dateStr)
+       ).sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora))
+       
+       setTimeout(() => { dayModalOpen.value = true }, 50)
+    }
 
     const OPERACAO_MAP = {
       'I': { label: 'Inclusão',  color: 'positive' },
@@ -335,6 +556,10 @@ export default defineComponent({
       return OPERACAO_MAP[op]?.color ?? 'grey'
     })
 
+    /**
+     * Formata CPF (11 dígitos) ou CPF com leading zero de 12 chars (padrão 671).
+     * Para o PIS (11 dígitos, campo de 12 com zero na frente), usa formatPIS.
+     */
     const formatCPF = (cpf) => {
       if (!cpf) return null
       const digits = cpf.replace(/\D/g, '')
@@ -342,14 +567,34 @@ export default defineComponent({
         return `${digits.substring(0,3)}.${digits.substring(3,6)}.${digits.substring(6,9)}-${digits.substring(9,11)}`
       }
       if (digits.length === 12) {
-        // CPF de 12 dígitos (padrão 671): primeiro dígito pode ser leading zero de PIS
-        // Exibe formatado como 3.3.3-2 ou 11 dígitos sem leading zero
         const trimmed = digits.replace(/^0/, '')
         if (trimmed.length === 11) {
           return `${trimmed.substring(0,3)}.${trimmed.substring(3,6)}.${trimmed.substring(6,9)}-${trimmed.substring(9,11)}`
         }
       }
       return cpf
+    }
+
+    /**
+     * Formata PIS para exibição (11 dígitos, campo pode vir com 12 chars com zero à esquerda).
+     * No 1510 o PIS está em campo de 12 chars, sempre com zero na frente quando 11 dígitos.
+     * Para portaria 671 o CPF tem o mesmo comportamento, então reutiliza formatCPF.
+     */
+    const formatPIS = (pis) => {
+      if (!pis) return null
+      const digits = pis.replace(/\D/g, '')
+      // PIS 11 dígitos: XXX.XXXXX.XX-X
+      if (digits.length === 11) {
+        return `${digits.substring(0,3)}.${digits.substring(3,8)}.${digits.substring(8,10)}-${digits.substring(10,11)}`
+      }
+      // Campo de 12 chars com zero na frente (1510)
+      if (digits.length === 12) {
+        const trimmed = digits.replace(/^0/, '')
+        if (trimmed.length === 11) {
+          return `${trimmed.substring(0,3)}.${trimmed.substring(3,8)}.${trimmed.substring(8,10)}-${trimmed.substring(10,11)}`
+        }
+      }
+      return pis
     }
 
     const formatDateTime = (isoStr) => {
@@ -385,7 +630,7 @@ export default defineComponent({
       return `${dd}/${m}/${y}`
     }
 
-    return { open, identificadorLabel, operacaoLabel, operacaoColor, formatCPF, formatDateTime, formatCNPJ14, formatDate }
+    return { open, identificadorLabel, operacaoLabel, operacaoColor, formatCPF, formatPIS, formatDateTime, formatCNPJ14, formatDate, conflictModalOpen, conflictingRecord, viewConflict, dayModalOpen, dayPunches, viewDayPunches }
   }
 })
 </script>

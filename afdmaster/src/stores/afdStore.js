@@ -27,7 +27,7 @@ export const useAfdStore = defineStore('afd', {
         // Form Filters globais para cross-component routing
         filters: {
             search: '',
-            onlyErrors: false,
+            status: null, // null | 'errors' | 'warnings'
             type: null,
             dateStart: '',
             dateEnd: ''
@@ -42,6 +42,14 @@ export const useAfdStore = defineStore('afd', {
             let count = 0
             state.records.forEach(r => {
                 if (r.erros && r.erros.length > 0) count++
+            })
+            return count
+        },
+
+        totalAvisos: (state) => {
+            let count = 0
+            state.records.forEach(r => {
+                if (r.avisos && r.avisos.length > 0) count++
             })
             return count
         },

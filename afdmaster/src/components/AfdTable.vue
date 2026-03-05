@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="q-pa-md" ref="rootRef">
     <div v-if="!store.hasRecords" class="text-center q-pa-xl text-grey-6">
       <q-icon name="warning" size="48px" />
@@ -31,14 +31,28 @@
                 <q-icon name="search" />
               </template>
             </q-input>
-            <q-btn
+            <q-btn-dropdown
                 unelevated
                 class="soft-btn"
-                icon="filter_alt"
-                label="Somente Erros"
-                @click="toggleErrorsFilter"
-                :color="showOnlyErrors ? 'negative' : 'primary'"
-            />
+                :color="statusFilterColor"
+                :icon="statusFilterIcon"
+                no-icon-animation
+            >
+              <q-list>
+                <q-item clickable v-close-popup @click="setStatusFilter(null)">
+                  <q-item-section avatar><q-icon name="list" color="primary" /></q-item-section>
+                  <q-item-section>Todos</q-item-section>
+                </q-item>
+                <q-item clickable v-close-popup @click="setStatusFilter('errors')">
+                  <q-item-section avatar><q-icon name="error" color="negative" /></q-item-section>
+                  <q-item-section>Somente Erros</q-item-section>
+                </q-item>
+                <q-item clickable v-close-popup @click="setStatusFilter('warnings')">
+                  <q-item-section avatar><q-icon name="warning" color="warning" /></q-item-section>
+                  <q-item-section>Somente Avisos</q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
         </div>
       </div>
 
@@ -56,7 +70,7 @@
         :rows-per-page-options="[0]"
         ref="qTableRef"
         :style="{ height: tableHeight + 'px' }"
-        table-style="table-layout: fixed; width: 100%;"
+        table-style="width: 100%;"
         class="soft-card sticky-header-table"
         title="Registros do Arquivo"
       >
@@ -71,28 +85,40 @@
           >
              <q-td v-for="col in props.cols" :key="col.name" :props="props">
                 <!-- Customizações de Célula -->
-                <template v-if="col.name === 'tipo'">
-                   <RecordTypeBadge :tipo="props.row.tipo" />
-                </template>
-                <template v-else-if="col.name === 'data'">
-                   {{ formatDataStr(props.row.dataHora) }}
-                </template>
-                <template v-else-if="col.name === 'hora'">
-                   {{ formatHoraStr(props.row.dataHora) }}
-                </template>
-                <template v-else-if="col.name === 'fuso'">
-                   <span v-if="props.row.fusoHorario" class="fuso-chip">{{ formatFuso(props.row.fusoHorario) }}</span>
-                   <span v-else class="text-grey-5">—</span>
-                </template>
-                <template v-else-if="col.name === 'identificador'">
-                   {{ formatCPF(props.row.cpf || props.row.pis) }}
-                </template>
+                 <template v-if="col.name === 'tipo'">
+                    <RecordTypeBadge :tipo="props.row.tipo" />
+                 </template>
+                 <template v-else-if="col.name === 'data'">
+                    {{ formatDataStr(props.row.dataHora) }}
+                 </template>
+                 <template v-else-if="col.name === 'hora'">
+                    {{ formatHoraStr(props.row.dataHora) }}
+                 </template>
+                 <template v-else-if="col.name === 'fuso'">
+                    <span v-if="props.row.fusoHorario" class="fuso-chip">{{ formatFuso(props.row.fusoHorario) }}</span>
+                    <span v-else class="text-grey-5">—</span>
+                 </template>
+                 <template v-else-if="col.name === 'identificador'">
+                    <span class="ident-cell">
+                      <span>{{ store.portaria === '1510' ? formatPIS(props.row.pis || props.row.cpf) : formatCPF(props.row.cpf || props.row.pis) }}</span>
+                      <button
+                        v-if="props.row.cpf || props.row.pis"
+                        class="copy-btn"
+                        title="Copiar"
+                        @click.stop="copyToClipboard(props.row.cpf || props.row.pis)"
+                      >⧉</button>
+                    </span>
+                 </template>
                 <template v-else-if="col.name === 'status'">
                    <q-badge v-if="props.row.erros && props.row.erros.length > 0" color="negative" text-color="white">
                      {{ props.row.erros.length }} Erro(s)
                      <q-tooltip><div v-for="(err, i) in props.row.erros" :key="i">- {{ err }}</div></q-tooltip>
                    </q-badge>
-                   <q-badge v-else-if="props.row.alterado" color="warning" text-color="black">Editado</q-badge>
+                   <q-badge v-else-if="props.row.avisos && props.row.avisos.length > 0" color="warning" text-color="black">
+                     {{ props.row.avisos.length }} Aviso(s)
+                     <q-tooltip><div v-for="(warn, i) in props.row.avisos" :key="i">- {{ warn.msg || warn }}</div></q-tooltip>
+                   </q-badge>
+                   <q-badge v-else-if="props.row.alterado" color="info" text-color="white">Editado</q-badge>
                    <q-badge v-else color="positive">OK</q-badge>
                 </template>
                 <!-- Valor Padrão -->
@@ -195,10 +221,28 @@ export default defineComponent({
       get: () => store.filters.search,
       set: (val) => store.setFilters({ search: val })
     })
-    const showOnlyErrors = computed({
-      get: () => store.filters.onlyErrors,
-      set: (val) => store.setFilters({ onlyErrors: val })
+    const statusFilter = computed({
+      get: () => store.filters.status,
+      set: (val) => store.setFilters({ status: val })
     })
+
+    const statusFilterColor = computed(() => {
+      if (statusFilter.value === 'errors') return 'negative'
+      if (statusFilter.value === 'warnings') return 'warning'
+      return 'primary'
+    })
+
+    const statusFilterIcon = computed(() => {
+      if (statusFilter.value === 'errors') return 'error'
+      if (statusFilter.value === 'warnings') return 'warning'
+      return 'filter_alt'
+    })
+
+    const setStatusFilter = (val) => {
+       statusFilter.value = val
+       if (!val) filter.value = ''
+    }
+
     const tipoFiltro = computed({
       get: () => store.filters.type,
       set: (val) => store.setFilters({ type: val })
@@ -212,27 +256,21 @@ export default defineComponent({
        set: (val) => store.setFilters({ dateEnd: val })
     })
 
-    const tipoOptions = [
-      { label: 'Todos os Registros', value: null },
-      { label: '1 - Cabeçalho', value: '1' },
-      { label: '2 - Empregador / Empresa', value: '2' },
-      { label: '3 - Marcação de Ponto', value: '3' },
-      { label: '4 - Ajuste de Relógio', value: '4' },
-      { label: '5 - Trabalhador', value: '5' },
-      { label: '6 - Eventos', value: '6' },
-      { label: '7 - Marcação REP-P', value: '7' }
-    ]
-
-    const toggleErrorsFilter = () => {
-      const isCurrentlyActive = showOnlyErrors.value
-      showOnlyErrors.value = !isCurrentlyActive
-      
-      // Quando o usuário desmarcar o botão "Somente Erros", 
-      // limpa a barra de pesquisa junto para fechar o Drill-down de vez
-      if (isCurrentlyActive) {
-        filter.value = ''
+    const tipoOptions = computed(() => {
+      const base = [
+        { label: 'Todos os Registros', value: null },
+        { label: '1 - Cabeçalho', value: '1' },
+        { label: '2 - Empregador / Empresa', value: '2' },
+        { label: '3 - Marcação de Ponto', value: '3' },
+        { label: '4 - Ajuste de Relógio', value: '4' },
+        { label: '5 - Trabalhador', value: '5' },
+      ]
+      if (store.portaria !== '1510') {
+        base.push({ label: '6 - Eventos', value: '6' })
+        base.push({ label: '7 - Marcação REP-P', value: '7' })
       }
-    }
+      return base
+    })
 
     // ── Formatadores ─────────────────────────────────────────────────────────
 
@@ -295,6 +333,38 @@ export default defineComponent({
       return cpf // fallback
     }
 
+    /**
+     * Formata PIS (11 dígitos) no padrão XXX.XXXXX.XX-X.
+     * Campo vem com 12 chars no 1510 (zero na frente).
+     */
+    const formatPIS = (pis) => {
+      if (!pis) return '—'
+      const digits = pis.replace(/\D/g, '')
+      if (digits.length === 11) {
+        return `${digits.substring(0,3)}.${digits.substring(3,8)}.${digits.substring(8,10)}-${digits.substring(10,11)}`
+      }
+      if (digits.length === 12) {
+        const trimmed = digits.replace(/^0/, '')
+        if (trimmed.length === 11) {
+          return `${trimmed.substring(0,3)}.${trimmed.substring(3,8)}.${trimmed.substring(8,10)}-${trimmed.substring(10,11)}`
+        }
+      }
+      return pis // fallback
+    }
+
+    /**
+     * Copia texto puro (digitos) para a área de transferência.
+     */
+    const copyToClipboard = (raw) => {
+      if (!raw) return
+      const digits = raw.replace(/\D/g, '').replace(/^0+/, '') // remove leading zeros do PIS/CPF
+      navigator.clipboard?.writeText(digits).then(() => {
+        $q.notify({ type: 'positive', message: 'Copiado!', timeout: 800, position: 'bottom-right' })
+      }).catch(() => {
+        $q.notify({ type: 'warning', message: 'Não foi possível copiar', timeout: 1200 })
+      })
+    }
+
     // ── Tipo 5 helpers ───────────────────────────────────────────────────────
     const operacaoLabel = (op) => OPERACAO_MAP[op]?.label ?? (op ? `"${op}"` : 'Desconhecida')
     const operacaoColor = (op) => OPERACAO_MAP[op]?.color ?? 'grey'
@@ -302,16 +372,23 @@ export default defineComponent({
     // ── Dados ────────────────────────────────────────────────────────────────
     const headerRecord = computed(() => store.records.find(r => r.tipo === '1'))
 
-    const columns = computed(() => [
-      { name: 'nsr',           label: 'NSR',       field: 'nsr',    sortable: true,  align: 'left',   style: 'width: 10%;', headerStyle: 'width: 10%;' },
-      { name: 'tipo',          label: 'Tipo',      field: 'tipo',   sortable: true,  align: 'center', style: 'width: 10%;', headerStyle: 'width: 10%;' },
-      { name: 'data',          label: 'Data',      field: 'data',   sortable: false, align: 'left',   style: 'width: 12%;', headerStyle: 'width: 12%;' },
-      { name: 'hora',          label: 'Hora',      field: 'hora',   sortable: false, align: 'left',   style: 'width: 12%;', headerStyle: 'width: 12%;' },
-      { name: 'fuso',          label: 'Fuso',      field: 'fuso',   sortable: false, align: 'center', style: 'width: 12%;', headerStyle: 'width: 12%;' },
-      { name: 'identificador', label: store.portaria === '1510' ? 'PIS' : 'CPF', field: 'id', sortable: true, align: 'left', style: 'width: 18%;', headerStyle: 'width: 18%;' },
-      { name: 'crc',           label: 'CRC',       field: 'crc',    sortable: false, align: 'center', style: 'width: 14%;', headerStyle: 'width: 14%;' },
-      { name: 'status',        label: 'Status',    field: 'status', align: 'center',                  style: 'width: 12%;', headerStyle: 'width: 12%;' },
-    ])
+    const columns = computed(() => {
+      const is1510 = store.portaria === '1510'
+      const cols = [
+        { name: 'nsr',           label: 'NSR',           field: 'nsr',  sortable: true,  align: 'left'   },
+        { name: 'tipo',          label: 'Tipo',           field: 'tipo', sortable: true,  align: 'center' },
+        { name: 'data',          label: 'Data',           field: 'data', sortable: false, align: 'left'   },
+        { name: 'hora',          label: 'Hora',           field: 'hora', sortable: false, align: 'left'   },
+      ]
+      // Fuso horário: só existe na 671
+      if (!is1510) {
+        cols.push({ name: 'fuso', label: 'Fuso', field: 'fuso', sortable: false, align: 'center' })
+      }
+      cols.push({ name: 'identificador', label: is1510 ? 'PIS' : 'CPF', field: 'id', sortable: true, align: 'left' })
+      cols.push({ name: 'crc', label: 'CRC', field: 'crc', sortable: false, align: 'center' })
+      cols.push({ name: 'status', label: 'Status', field: 'status', align: 'center' })
+      return cols
+    })
 
     const normalizeCPF = (raw) => {
       if (!raw) return ''
@@ -320,7 +397,7 @@ export default defineComponent({
 
     const activeFilters = computed(() => ({
       search: filter.value,
-      onlyErrors: showOnlyErrors.value,
+      status: statusFilter.value,
       type: tipoFiltro.value,
       dateStart: dataInicio.value,
       dateEnd: dataFim.value
@@ -329,15 +406,17 @@ export default defineComponent({
     // Gatilho infalível para forçar o Quasar a refiltrar a tabela:
     // Concatena tudo num primitivo. Sempre que mudar, a QTable recarrega.
     const filterTrigger = computed(() => {
-       return `${filter.value}|${showOnlyErrors.value}|${tipoFiltro.value}|${dataInicio.value}|${dataFim.value}`
+       return `${filter.value}|${statusFilter.value}|${tipoFiltro.value}|${dataInicio.value}|${dataFim.value}`
     })
 
     const customFilterMethod = (rows) => {
       let recs = rows
       const filters = activeFilters.value
 
-      if (filters.onlyErrors) {
+      if (filters.status === 'errors') {
         recs = recs.filter(r => r.erros && r.erros.length > 0)
+      } else if (filters.status === 'warnings') {
+        recs = recs.filter(r => r.avisos && r.avisos.length > 0)
       }
 
       if (filters.type) {
@@ -359,7 +438,7 @@ export default defineComponent({
          const qLower = q.toLowerCase()
          const qDigits = normalizeCPF(q)
 
-         recs = recs.filter(row => {
+          recs = recs.filter(row => {
             if (String(row.nsr || '').includes(q)) return true
             if (qDigits.length >= 3) {
                const rowCpf = normalizeCPF(row.cpf || row.pis || '')
@@ -367,6 +446,7 @@ export default defineComponent({
             }
             if (row.nomeEmpregado && row.nomeEmpregado.toLowerCase().includes(qLower)) return true
             if (row.erros && row.erros.some(err => err.toLowerCase().includes(qLower))) return true
+            if (row.avisos && row.avisos.some(warn => (warn.msg || warn).toLowerCase().includes(qLower))) return true
             return false
          })
       }
@@ -424,12 +504,14 @@ export default defineComponent({
     return {
       store,
       filter,
-      showOnlyErrors,
+      statusFilter,
+      statusFilterColor,
+      statusFilterIcon,
+      setStatusFilter,
       tipoFiltro,
       dataInicio,
       dataFim,
       tipoOptions,
-      toggleErrorsFilter,
       columns,
       headerRecord,
       isDetailOpen,
@@ -446,6 +528,8 @@ export default defineComponent({
       customFilterMethod,
       operacaoLabel,
       operacaoColor,
+      formatPIS,
+      copyToClipboard,
       saveField,
       saveFieldId,
       qTableRef,
@@ -596,4 +680,41 @@ export default defineComponent({
 .text-mono {
   font-family: 'Roboto Mono', 'Courier New', monospace;
 }
+
+/* ── Identificador Cell com botão Copiar ───────────────────────────────── */
+.ident-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  height: 18px;
+  font-size: 0.82rem;
+  line-height: 1;
+  color: #9e9e9e;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+  outline: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.table-row:hover .copy-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.copy-btn:hover {
+  color: #1565c0;
+  background: rgba(21, 101, 192, 0.08);
+}
+
 </style>

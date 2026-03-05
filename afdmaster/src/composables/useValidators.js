@@ -22,6 +22,7 @@ export function useValidators() {
 
         records.forEach(rec => {
             rec.erros = [] // zera
+            rec.avisos = [] // zera
 
             // Validação de NSR (ignorada para o Cabeçalho - tipo 1)
             if (rec.tipo !== '1') {
@@ -73,15 +74,18 @@ export function useValidators() {
                     }
 
                     // Verifica se já existe batida dentro da janela de tolerância para o mesmo func
-                    const isDuplicata = marcacoesPorFuncionario[empId].some(
-                        (existingMs) => Math.abs(existingMs - dtTime) <= toleranceMs
+                    const conflito = marcacoesPorFuncionario[empId].find(
+                        (entry) => Math.abs(entry.ms - dtTime) <= toleranceMs
                     )
 
-                    if (isDuplicata) {
-                        rec.erros.push(`Aviso: Possível marcação duplicada (intervalo menor ou igual a ${settings.duplicateToleranceMinutes} min)`)
+                    if (conflito) {
+                        rec.avisos.push({
+                            msg: `Possível marcação duplicada (intervalo ≤ ${settings.duplicateToleranceMinutes} min)`,
+                            conflitoNsr: conflito.nsr
+                        })
                     }
 
-                    marcacoesPorFuncionario[empId].push(dtTime)
+                    marcacoesPorFuncionario[empId].push({ ms: dtTime, nsr: rec.nsr })
                 }
             }
 
@@ -111,12 +115,23 @@ export function useValidators() {
                 porDia[bDate].push(b)
             })
 
-            // Verifica ímpar
+            // Ordena cronologicamente por via das dúvidas
             for (const d in porDia) {
+                porDia[d].sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora))
+
+                // Marca pares Entrada/Saída
+                porDia[d].forEach((b, index) => {
+                    const number = Math.floor(index / 2) + 1
+                    const tipoMovimento = index % 2 === 0 ? 'Entrada' : 'Saída'
+                    b.ordemPar = `${tipoMovimento} ${number}`
+                })
+
                 if (porDia[d].length % 2 !== 0) {
                     // Marca warning no último evento do dia
                     const ultimoEvento = porDia[d][porDia[d].length - 1]
-                    ultimoEvento.erros.push('Aviso: Número ímpar de marcações neste dia. Pode indicar falha na batida.')
+                    ultimoEvento.avisos.push({
+                        msg: 'Número ímpar de marcações neste dia. Pode indicar falha na batida.'
+                    })
                 }
             }
         }

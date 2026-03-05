@@ -8,7 +8,7 @@
     <div v-else>
       <div class="row q-col-gutter-md">
         <!-- Overview Stats -->
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <q-card class="soft-card bg-negative text-white">
             <q-card-section>
               <div class="text-overline uppercase">Total de Erros</div>
@@ -16,15 +16,23 @@
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <q-card class="soft-card bg-warning text-black">
+            <q-card-section>
+              <div class="text-overline uppercase">Total de Avisos</div>
+              <div class="text-h3">{{ store.totalAvisos }}</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-12 col-md-3">
+          <q-card class="soft-card bg-info text-white">
             <q-card-section>
               <div class="text-overline uppercase">Registros Alterados</div>
               <div class="text-h3">{{ store.totalAlterados }}</div>
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <q-card class="soft-card bg-primary text-white">
             <q-card-section>
               <div class="text-overline uppercase">Total Processado</div>
@@ -37,7 +45,7 @@
         <div class="col-12 q-mt-md" v-if="store.totalErros > 0">
            <q-card class="soft-card">
               <q-card-section class="q-pb-none">
-                <div class="text-h6 text-negative">Resumo de Inconsistências</div>
+                <div class="text-h6 text-negative">Resumo de Erros Críticos</div>
               </q-card-section>
               <q-card-section>
                 <q-list separator>
@@ -62,12 +70,44 @@
               </q-card-section>
            </q-card>
         </div>
-        <div class="col-12 q-mt-md" v-else>
+
+        <!-- Lista de avisos consolidada -->
+        <div class="col-12 q-mt-md" v-if="store.totalAvisos > 0">
+           <q-card class="soft-card border-warning">
+              <q-card-section class="q-pb-none">
+                <div class="text-h6 text-warning-dark">Resumo de Avisos</div>
+              </q-card-section>
+              <q-card-section>
+                <q-list separator>
+                  <q-item 
+                    v-for="(count, warnMsg) in aggregatedWarnings" 
+                    :key="warnMsg"
+                    clickable
+                    v-ripple
+                    @click="$emit('filter-warning', warnMsg)"
+                  >
+                     <q-item-section>
+                       <q-item-label>{{ warnMsg }}</q-item-label>
+                     </q-item-section>
+                     <q-item-section side>
+                       <q-badge color="warning" text-color="black" class="text-weight-bold" :label="count + ' ocorrência(s)'" />
+                     </q-item-section>
+                     <q-tooltip class="bg-dark text-body2">
+                        Clique para visualizar os registros com este aviso
+                     </q-tooltip>
+                  </q-item>
+                </q-list>
+              </q-card-section>
+           </q-card>
+        </div>
+
+        <!-- Everything OK State -->
+        <div class="col-12 q-mt-md" v-if="store.totalErros === 0 && store.totalAvisos === 0">
            <q-card class="soft-card bg-positive text-white">
               <q-card-section class="text-center">
                  <q-icon name="check_circle" size="48px" />
                  <div class="text-h6 q-mt-md">Arquivo sem inconsistências!</div>
-                 <div class="text-subtitle2">Pronto para ser exportado orginalmente ou com novas alterações.</div>
+                 <div class="text-subtitle2">Nenhum erro ou aviso detectado. Pronto para exportação.</div>
               </q-card-section>
            </q-card>
         </div>
@@ -99,9 +139,24 @@ export default defineComponent({
        return counts
     })
 
+    const aggregatedWarnings = computed(() => {
+       const counts = {}
+       store.records.forEach(r => {
+          if (r.avisos && r.avisos.length > 0) {
+             r.avisos.forEach(warn => {
+                const wMsg = warn.msg || warn // fallback if it's a string
+                if (!counts[wMsg]) counts[wMsg] = 0
+                counts[wMsg]++
+             })
+          }
+       })
+       return counts
+    })
+
     return {
       store,
-      aggregatedErrors
+      aggregatedErrors,
+      aggregatedWarnings
     }
   }
 })

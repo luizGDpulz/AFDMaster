@@ -52,7 +52,7 @@
 
           <!-- Aba Validações -->
           <q-tab-panel name="validation">
-            <ValidationReport @filter-error="handleFilterError" />
+            <ValidationReport @filter-error="handleFilterError" @filter-warning="handleFilterWarning" />
           </q-tab-panel>
 
           <!-- Aba Exportar -->
@@ -126,8 +126,17 @@ export default defineComponent({
     const handleFilterError = (errorMsg) => {
        store.setFilters({
           search: errorMsg,
-          onlyErrors: true,
+          status: 'errors',
           type: null // Remove qualquer filtro de tipo ativo para não bloquear resultados
+       })
+       tab.value = 'records'
+    }
+
+    const handleFilterWarning = (warnMsg) => {
+       store.setFilters({
+          search: warnMsg,
+          status: 'warnings',
+          type: null
        })
        tab.value = 'records'
     }
@@ -179,7 +188,8 @@ export default defineComponent({
       onFileProcessingStart,
       onFileProcessed,
       downloadFile,
-      handleFilterError
+      handleFilterError,
+      handleFilterWarning
     }
   }
 })
