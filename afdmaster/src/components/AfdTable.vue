@@ -131,20 +131,37 @@
         </template>
       </q-table>
 
-      <!-- Modal de Detalhes de Registro (Substitui Expansão Inline) -->
-      <RecordDetailDialog v-model="isDetailOpen" :record="selectedRecord" />
+      <!-- Modal Único de Detalhes -> Contém a tela principal e os filhos lado a lado -->
+      <q-dialog v-model="isDetailOpen" transition-show="fade" transition-hide="fade" class="wide-dialog">
+         <div class="row no-wrap items-start justify-center shadow-0" style="gap: 24px; padding: 12px; background: transparent;">
+            <div class="modal-slide-card">
+               <RecordDetailDialog :record="selectedRecord" @hide="isDetailOpen = false" @viewConflict="openConflict" @viewDayPunches="openDayPunches" />
+            </div>
+
+            <!-- Modal Secundário para Marcação Conflitante -->
+            <div class="modal-slide-card" v-if="conflictModalOpen">
+               <RecordDetailDialog :record="conflictingRecord" is-child @hide="conflictModalOpen = false" @viewDayPunches="openDayPunches" />
+            </div>
+            
+            <!-- Modal Secundário para Marcações do Dia -->
+            <div class="modal-slide-card" v-if="dayModalOpen">
+               <DayPunchesDialog :punches="dayPunches" @hide="dayModalOpen = false" />
+            </div>
+         </div>
+      </q-dialog>
 
     </div>
   </div>
 
 </template>
 <script>
-import { defineComponent, ref, computed, onMounted, onUnmounted } from 'vue'
+import { defineComponent, ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useValidators } from 'src/composables/useValidators'
 import { useQuasar } from 'quasar'
 import RecordTypeBadge from 'src/components/RecordTypeBadge.vue'
 import RecordDetailDialog from 'src/components/RecordDetailDialog.vue'
+import DayPunchesDialog from 'src/components/DayPunchesDialog.vue'
 
 const OPERACAO_MAP = {
   'I': { label: 'Inclusão',  color: 'positive' },
@@ -154,7 +171,7 @@ const OPERACAO_MAP = {
 
 export default defineComponent({
   name: 'AfdTable',
-  components: { RecordTypeBadge, RecordDetailDialog },
+  components: { RecordTypeBadge, RecordDetailDialog, DayPunchesDialog },
   setup() {
     const store = useAfdStore()
     const { validateSingle, validateBulk } = useValidators()
@@ -211,9 +228,41 @@ export default defineComponent({
     const isDetailOpen = ref(false)
     const selectedRecord = ref({})
 
+    const conflictModalOpen = ref(false)
+    const conflictingRecord = ref({})
+    
+    const dayModalOpen = ref(false)
+    const dayPunches = ref([])
+
+    watch(isDetailOpen, (val) => {
+      if (!val) {
+        conflictModalOpen.value = false
+        dayModalOpen.value = false
+      }
+    })
+
     const openRecordDetail = (row) => {
       selectedRecord.value = row
       isDetailOpen.value = true
+    }
+
+    const openConflict = (nsr) => {
+       if (!nsr) return
+       dayModalOpen.value = false
+       const rec = store.records.find(r => String(r.nsr) === String(nsr))
+       if (rec) {
+          conflictingRecord.value = rec
+          setTimeout(() => { conflictModalOpen.value = true }, 50)
+       }
+    }
+
+    const openDayPunches = ({ punches }) => {
+       if (!punches || punches.length === 0) return
+       conflictModalOpen.value = false
+       dayPunches.value = punches
+       
+       // Garante que o Vue atualizou o estado (isChildOpened / hasChildOpen) antes de lançar o modal
+       setTimeout(() => { dayModalOpen.value = true }, 50)
     }
 
     // ── Filtros ──────────────────────────────────────────────────────────────
@@ -517,6 +566,12 @@ export default defineComponent({
       isDetailOpen,
       selectedRecord,
       openRecordDetail,
+      conflictModalOpen,
+      conflictingRecord,
+      openConflict,
+      dayModalOpen,
+      dayPunches,
+      openDayPunches,
       formatDateTime,
       formatDataStr,
       formatHoraStr,
@@ -717,4 +772,35 @@ export default defineComponent({
   background: rgba(21, 101, 192, 0.08);
 }
 
+.modal-slide-card {
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
+  animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+</style>
+
+<style>
+/* ── Modal Inteligente (Global, pois o q-dialog injeta no body) ── */
+
+/* Remove a caixa delimitadora do container flex do pai para permitir que o filho vaze lado a lado sem overflow auto */
+.wide-dialog .q-dialog__inner,
+.wide-dialog .q-dialog__inner--minimized {
+  overflow: visible !important;
+}
+
+/* Força a janela interna do filho a não ter maxWidth, borders nem background duro */
+.wide-dialog .q-dialog__inner > div,
+.wide-dialog .q-dialog__inner--minimized > div {
+  max-width: 100vw !important;
+  width: max-content !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
+}
 </style>

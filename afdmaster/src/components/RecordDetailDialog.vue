@@ -1,10 +1,5 @@
 <template>
-  <q-dialog v-model="open" @hide="$emit('update:modelValue', false)" :seamless="isChild">
-    <q-card style="min-width: 480px; max-width: 600px; border-radius: 24px; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);"
-            :style="[
-               isChild ? 'transform: translateX(260px);' : '',
-               (!isChild && (conflictModalOpen || dayModalOpen)) ? 'transform: translateX(-260px);' : ''
-            ]"
+    <q-card style="min-width: 480px; max-width: 600px; border-radius: 24px; max-height: 90vh; display: flex; flex-direction: column;"
             class="soft-card shadow-12">
       <!-- Header -->
       <q-card-section class="row items-center q-pb-none">
@@ -14,7 +9,7 @@
           <span class="text-h6 text-weight-bold" v-else>Registro Conflitante</span>
         </div>
         <q-space />
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat round dense @click="$emit('hide')" />
       </q-card-section>
 
       <q-separator class="q-mt-sm" />
@@ -439,50 +434,10 @@
         </q-card-section>
       </template>
     </q-card>
-  </q-dialog>
-
-  <!-- Modal Secundário para Marcação Conflitante -->
-  <q-dialog v-model="conflictModalOpen" position="center" seamless>
-    <RecordDetailDialog :model-value="conflictModalOpen" @update:model-value="val => conflictModalOpen = val" :record="conflictingRecord" is-child />
-  </q-dialog>
-
-  <!-- Modal Secundário para Marcações do Dia -->
-  <q-dialog v-model="dayModalOpen" position="center" seamless>
-    <q-card style="min-width: 480px; max-width: 600px; border-radius: 24px; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); transform: translateX(260px);" class="soft-card shadow-12">
-      <q-card-section class="row items-center q-pb-none">
-        <div class="row items-center q-gutter-sm">
-          <q-icon name="today" size="sm" color="primary" />
-          <span class="text-h6 text-weight-bold">Marcações do Dia</span>
-        </div>
-        <q-space />
-        <q-btn icon="close" flat round dense v-close-popup />
-      </q-card-section>
-      <q-separator class="q-mt-sm" />
-      
-      <q-card-section class="q-pa-md bg-grey-1" style="max-height: 60vh; overflow-y: auto;">
-         <q-list separator class="bg-white rounded-borders shadow-1">
-            <q-item v-for="(punch, idx) in dayPunches" :key="idx" clickable v-ripple>
-               <q-item-section avatar>
-                  <q-chip :color="punch.ordemPar && punch.ordemPar.startsWith('Entrada') ? 'green-2' : 'orange-2'" text-color="black" size="sm" class="text-weight-bold shadow-1">
-                     {{ punch.ordemPar || '?' }}
-                  </q-chip>
-               </q-item-section>
-               <q-item-section>
-                  <q-item-label class="text-weight-bold text-mono">{{ punch.dataHora ? punch.dataHora.substring(11, 16) : '—' }}</q-item-label>
-                  <q-item-label caption>{{ formatDate(punch.dataHora ? punch.dataHora.substring(0, 10) : '') }} <span v-if="punch.fusoHorario">GMT{{ punch.fusoHorario }}</span></q-item-label>
-               </q-item-section>
-               <q-item-section side>
-                  <q-badge color="grey-3" text-color="grey-8">NSR: {{ punch.nsr }}</q-badge>
-               </q-item-section>
-            </q-item>
-         </q-list>
-      </q-card-section>
-    </q-card>
-  </q-dialog>
 </template>
 
 <script>
-import { defineComponent, computed, ref } from 'vue'
+import { defineComponent, computed } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import RecordTypeBadge from 'src/components/RecordTypeBadge.vue'
 
@@ -493,51 +448,33 @@ export default defineComponent({
   props: {
     modelValue: { type: Boolean, default: false },
     record: { type: Object, default: () => ({}) },
-    isChild: { type: Boolean, default: false }
+    isChild: { type: Boolean, default: false },
+    hasChildOpen: { type: Boolean, default: false }
   },
 
-  emits: ['update:modelValue'],
+  emits: ['hide', 'viewConflict', 'viewDayPunches'],
 
   setup(props, { emit }) {
     const store = useAfdStore()
     const identificadorLabel = computed(() => store.portaria === '1510' ? 'PIS' : 'CPF')
 
-    const open = computed({
-      get: () => props.modelValue,
-      set: (val) => emit('update:modelValue', val)
-    })
-
-    const conflictModalOpen = ref(false)
-    const conflictingRecord = ref({})
-
     const viewConflict = (nsr) => {
-       if (!nsr) return
-       // Fechar day modal se estiver aberto para não sobrepor 2 modais filhos
-       dayModalOpen.value = false
-       const rec = store.records.find(r => String(r.nsr) === String(nsr))
-       if (rec) {
-          conflictingRecord.value = rec
-          setTimeout(() => { conflictModalOpen.value = true }, 50)
-       }
+       emit('viewConflict', nsr)
     }
-
-    const dayModalOpen = ref(false)
-    const dayPunches = ref([])
 
     const viewDayPunches = (rec) => {
        if (!rec.dataHora) return
-       conflictModalOpen.value = false
        const empId = rec.cpf || rec.pis
        if (!empId) return
        
        const dateStr = rec.dataHora.substring(0, 10)
-       dayPunches.value = store.records.filter(r => 
+       const punches = store.records.filter(r => 
           r.tipo === '3' && 
           (r.cpf === empId || r.pis === empId) && 
           r.dataHora && r.dataHora.startsWith(dateStr)
        ).sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora))
        
-       setTimeout(() => { dayModalOpen.value = true }, 50)
+       emit('viewDayPunches', { rec, punches })
     }
 
     const OPERACAO_MAP = {
@@ -630,7 +567,7 @@ export default defineComponent({
       return `${dd}/${m}/${y}`
     }
 
-    return { open, identificadorLabel, operacaoLabel, operacaoColor, formatCPF, formatPIS, formatDateTime, formatCNPJ14, formatDate, conflictModalOpen, conflictingRecord, viewConflict, dayModalOpen, dayPunches, viewDayPunches }
+    return { identificadorLabel, operacaoLabel, operacaoColor, formatCPF, formatPIS, formatDateTime, formatCNPJ14, formatDate, viewConflict, viewDayPunches }
   }
 })
 </script>
