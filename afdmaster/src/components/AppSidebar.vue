@@ -69,7 +69,10 @@ export default defineComponent({
 
     const menuItems = [
       { path: '/', label: 'Analisar AFD', icon: 'analytics' },
-      { path: '/settings', label: 'Configurações', icon: 'settings' }
+      { path: '/generator', label: 'Gerador de AFD', icon: 'precision_manufacturing' },
+      { path: '/docs', label: 'Documentação', icon: 'menu_book' },
+      { path: '/settings', label: 'Configurações', icon: 'settings' },
+      { path: '/about', label: 'Sobre', icon: 'info' }
     ]
 
     const isActive = (path) => {

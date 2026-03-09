@@ -89,6 +89,7 @@ export default defineComponent({
 
     const menuItems = [
       { path: '/', label: 'Analisar AFD' },
+      { path: '/docs', label: 'Documentação' },
       { path: '/settings', label: 'Configurações' }
     ]
 

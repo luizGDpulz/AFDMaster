@@ -26,7 +26,7 @@
            <q-input dense outlined v-model="dataFim" type="date" label="Data Fim" class="soft-input bg-white" />
         </div>
         <div class="col-12 col-md-5 row justify-end items-center">
-            <q-input dense outlined v-model="filter" placeholder="Buscar: NSR, CPF, nome..." class="q-mr-sm soft-input bg-white" style="flex-grow: 1;">
+            <q-input dense outlined v-model="localSearchQuery" @update:model-value="onSearchInput" placeholder="Buscar: NSR, CPF, nome..." class="q-mr-sm soft-input bg-white" style="flex-grow: 1;">
               <template v-slot:append>
                 <q-icon name="search" />
               </template>
@@ -63,6 +63,7 @@
         row-key="id"
         :filter="filterTrigger"
         :filter-method="customFilterMethod"
+        :loading="isFiltering"
         virtual-scroll
         :virtual-scroll-item-size="48"
         :virtual-scroll-sticky-size-start="48"
@@ -158,7 +159,7 @@
 import { defineComponent, ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useValidators } from 'src/composables/useValidators'
-import { useQuasar } from 'quasar'
+import { useQuasar, debounce } from 'quasar'
 import RecordTypeBadge from 'src/components/RecordTypeBadge.vue'
 import RecordDetailDialog from 'src/components/RecordDetailDialog.vue'
 import DayPunchesDialog from 'src/components/DayPunchesDialog.vue'
@@ -174,7 +175,7 @@ export default defineComponent({
   components: { RecordTypeBadge, RecordDetailDialog, DayPunchesDialog },
   setup() {
     const store = useAfdStore()
-    const { validateSingle, validateBulk } = useValidators()
+    const { validateSingle } = useValidators()
     const $q = useQuasar()
 
     const pagination = ref({ rowsPerPage: 0 })
@@ -266,13 +267,42 @@ export default defineComponent({
     }
 
     // ── Filtros ──────────────────────────────────────────────────────────────
+    
+    const isFiltering = ref(false)
+
+    // Helper: liga o spinner, dá chance ao browser de pintar a tela (yield) 
+    // e só depois dispara a rotina sincronizada pesada
+    const applyFilterWithLoading = (actionFn) => {
+        isFiltering.value = true
+        setTimeout(() => {
+            actionFn()
+            // Mais um tick pro vue renderizar as td/tr antes de desligar o loading
+            setTimeout(() => { isFiltering.value = false }, 50)
+        }, 10)
+    }
+
+    // Para evitar lerdeza absurda ao digitar em um arquivo de 500k linhas, 
+    // desacoplamos o input de busca (local) da reatividade da Store (global) via Debounce
+    const localSearchQuery = ref(store.filters.search)
+
     const filter = computed({
       get: () => store.filters.search,
       set: (val) => store.setFilters({ search: val })
     })
+
+    const debouncedApplySearch = debounce((val) => {
+        filter.value = val
+        setTimeout(() => { isFiltering.value = false }, 50)
+    }, 400)
+
+    const onSearchInput = (val) => {
+        isFiltering.value = true
+        debouncedApplySearch(val)
+    }
+
     const statusFilter = computed({
       get: () => store.filters.status,
-      set: (val) => store.setFilters({ status: val })
+      set: (val) => applyFilterWithLoading(() => store.setFilters({ status: val }))
     })
 
     const statusFilterColor = computed(() => {
@@ -288,21 +318,26 @@ export default defineComponent({
     })
 
     const setStatusFilter = (val) => {
-       statusFilter.value = val
-       if (!val) filter.value = ''
+       applyFilterWithLoading(() => {
+           store.setFilters({ status: val })
+           if (!val) {
+               localSearchQuery.value = ''
+               filter.value = ''
+           }
+       })
     }
 
     const tipoFiltro = computed({
       get: () => store.filters.type,
-      set: (val) => store.setFilters({ type: val })
+      set: (val) => applyFilterWithLoading(() => store.setFilters({ type: val }))
     })
     const dataInicio = computed({
        get: () => store.filters.dateStart,
-       set: (val) => store.setFilters({ dateStart: val })
+       set: (val) => applyFilterWithLoading(() => store.setFilters({ dateStart: val }))
     })
     const dataFim = computed({
        get: () => store.filters.dateEnd,
-       set: (val) => store.setFilters({ dateEnd: val })
+       set: (val) => applyFilterWithLoading(() => store.setFilters({ dateEnd: val }))
     })
 
     const tipoOptions = computed(() => {
@@ -459,45 +494,69 @@ export default defineComponent({
     })
 
     const customFilterMethod = (rows) => {
-      let recs = rows
       const filters = activeFilters.value
+      const hasStatus = !!filters.status
+      const hasType = !!filters.type
+      const hasStart = !!filters.dateStart
+      const hasEnd = !!filters.dateEnd
+      const hasSearch = !!(filters.search && filters.search.trim())
 
-      if (filters.status === 'errors') {
-        recs = recs.filter(r => r.erros && r.erros.length > 0)
-      } else if (filters.status === 'warnings') {
-        recs = recs.filter(r => r.avisos && r.avisos.length > 0)
+      // Pre-processamento fora do loop para máxima performance
+      const d1 = hasStart ? new Date(filters.dateStart + 'T00:00:00').getTime() : 0
+      const d2 = hasEnd ? new Date(filters.dateEnd + 'T23:59:59').getTime() : 0
+      let q = '', qLower = '', qDigits = ''
+      
+      if (hasSearch) {
+         q = filters.search.trim()
+         qLower = q.toLowerCase()
+         qDigits = normalizeCPF(q)
       }
 
-      if (filters.type) {
-        recs = recs.filter(r => r.tipo === filters.type)
+      // Se não houver nenhum filtro ativo, a tabela nem precisa iterar
+      if (!hasStatus && !hasType && !hasStart && !hasEnd && !hasSearch) {
+         return rows
       }
 
-      if (filters.dateStart) {
-        const d1 = new Date(filters.dateStart + 'T00:00:00').getTime()
-        recs = recs.filter(r => r.dataHora && new Date(r.dataHora).getTime() >= d1)
-      }
+      const recs = []
+      const len = rows.length
 
-      if (filters.dateEnd) {
-        const d2 = new Date(filters.dateEnd + 'T23:59:59').getTime()
-        recs = recs.filter(r => r.dataHora && new Date(r.dataHora).getTime() <= d2)
-      }
+      // Loop único de altíssima performance O(N) invés de 5 filter() seguidos (Evita 250k repetições)
+      for (let i = 0; i < len; i++) {
+        const row = rows[i]
 
-      if (filters.search && filters.search.trim()) {
-         const q = filters.search.trim()
-         const qLower = q.toLowerCase()
-         const qDigits = normalizeCPF(q)
+        // 1. Status Filter
+        if (hasStatus) {
+           if (filters.status === 'errors' && (!row.erros || row.erros.length === 0)) continue
+           if (filters.status === 'warnings' && (!row.avisos || row.avisos.length === 0)) continue
+        }
 
-          recs = recs.filter(row => {
-            if (String(row.nsr || '').includes(q)) return true
-            if (qDigits.length >= 3) {
-               const rowCpf = normalizeCPF(row.cpf || row.pis || '')
-               if (rowCpf.includes(qDigits)) return true
-            }
-            if (row.nomeEmpregado && row.nomeEmpregado.toLowerCase().includes(qLower)) return true
-            if (row.erros && row.erros.some(err => err.toLowerCase().includes(qLower))) return true
-            if (row.avisos && row.avisos.some(warn => (warn.msg || warn).toLowerCase().includes(qLower))) return true
-            return false
-         })
+        // 2. Type Filter
+        if (hasType && row.tipo !== filters.type) continue
+
+        // 3. Date Range (Cachea o .getTime())
+        let rowTime = null
+        if (hasStart || hasEnd) {
+           if (!row.dataHora) continue
+           rowTime = new Date(row.dataHora).getTime()
+           if (isNaN(rowTime)) continue
+        }
+        if (hasStart && rowTime < d1) continue
+        if (hasEnd && rowTime > d2) continue
+
+        // 4. Search Filter
+        if (hasSearch) {
+           let match = false
+           if (String(row.nsr || '').includes(q)) match = true
+           else if (qDigits.length >= 3 && normalizeCPF(row.cpf || row.pis || '').includes(qDigits)) match = true
+           else if (row.nomeEmpregado && row.nomeEmpregado.toLowerCase().includes(qLower)) match = true
+           else if (row.erros && row.erros.some(err => err.toLowerCase().includes(qLower))) match = true
+           else if (row.avisos && row.avisos.some(warn => (warn.msg || warn).toLowerCase().includes(qLower))) match = true
+
+           if (!match) continue
+        }
+
+        // Se sobreviveu a todos os `continue`, é válido
+        recs.push(row)
       }
 
       return recs
@@ -511,16 +570,10 @@ export default defineComponent({
           $q.notify({ type: 'warning', message: errors.join(', ') })
        }
        store.updateRecord(row.id, { [field]: val })
-       validatorsrecheck()
     }
 
     const saveFieldId = (row, val) => {
        store.updateRecord(row.id, { cpf: val, pis: val })
-       validatorsrecheck()
-    }
-
-    const validatorsrecheck = () => {
-        validateBulk(store.records, store.portaria, store.settings.checkNsrSequential)
     }
 
     /**
@@ -590,7 +643,10 @@ export default defineComponent({
       qTableRef,
       rootRef,
       tableHeight,
-      pagination
+      pagination,
+      localSearchQuery,
+      onSearchInput,
+      isFiltering
     }
   }
 })

@@ -39,12 +39,13 @@
         >
           <q-tab name="records" class="rounded-pill q-mx-sm" icon="table_view" label="Registros" />
           <q-tab name="validation" class="rounded-pill q-mx-sm" icon="rule" label="Validações" />
+          <q-tab name="editor" class="rounded-pill q-mx-sm" icon="edit_document" label="Edição/Lote" />
           <q-tab name="export" class="rounded-pill q-mx-sm" icon="file_download" label="Exportar" />
         </q-tabs>
 
         <q-separator />
 
-        <q-tab-panels v-model="tab" animated>
+        <q-tab-panels v-model="tab" animated keep-alive>
           <!-- Aba Registros -->
           <q-tab-panel name="records" class="q-pa-none">
             <AfdTable />
@@ -55,25 +56,67 @@
             <ValidationReport @filter-error="handleFilterError" @filter-warning="handleFilterWarning" />
           </q-tab-panel>
 
+          <!-- Aba Edição Lote -->
+          <q-tab-panel name="editor">
+            <AfdAdvancedEditor />
+          </q-tab-panel>
+
           <!-- Aba Exportar -->
           <q-tab-panel name="export">
-            <div class="q-pa-md text-center">
-              <div class="text-h6 q-mb-md">Configurações de Exportação</div>
-               <q-toggle
-                  v-model="store.settings.reindexNsrExport"
-                  label="Reindexar NSR (Recalcular do 1 até o fim)"
-                  color="primary"
-                  class="q-mb-md"
-               />
-               <br />
-               <q-btn
-                  color="primary"
-                  icon="save_alt"
-                  label="Baixar Arquivo AFD Editado"
-                  unelevated
-                  class="soft-btn soft-btn-primary q-mt-md"
-                  @click="downloadFile"
-               />
+            <div class="q-pa-md">
+              <div class="text-h6 q-mb-md text-center">Filtros de Exportação do AFD</div>
+              
+              <div class="row q-col-gutter-md q-mb-md justify-center">
+                 <div class="col-12 col-md-5">
+                    <q-card class="soft-card" flat bordered>
+                       <q-card-section>
+                          <div class="text-subtitle2 q-mb-sm text-primary">Intervalo de Data</div>
+                          <div class="row q-col-gutter-sm">
+                             <div class="col-6">
+                                <q-input dense outlined v-model="exportFilters.dateStart" type="date" label="A Partir De" class="soft-input bg-white" />
+                             </div>
+                             <div class="col-6">
+                                <q-input dense outlined v-model="exportFilters.dateEnd" type="date" label="Até" class="soft-input bg-white" />
+                             </div>
+                          </div>
+                       </q-card-section>
+                    </q-card>
+                 </div>
+                 <div class="col-12 col-md-5">
+                    <q-card class="soft-card" flat bordered>
+                       <q-card-section>
+                          <div class="text-subtitle2 q-mb-sm text-warning-dark">Intervalo de NSR</div>
+                          <div class="row q-col-gutter-sm">
+                             <div class="col-6">
+                                <q-input dense outlined v-model.number="exportFilters.nsrStart" type="number" label="NSR Mínimo" class="soft-input bg-white" />
+                             </div>
+                             <div class="col-6">
+                                <q-input dense outlined v-model.number="exportFilters.nsrEnd" type="number" label="NSR Máximo" class="soft-input bg-white" />
+                             </div>
+                          </div>
+                       </q-card-section>
+                    </q-card>
+                 </div>
+              </div>
+
+              <div class="text-center">
+                 <q-toggle
+                    v-model="store.settings.reindexNsrExport"
+                    label="Reindexar NSR (Forçar recalculo sequencial no arquivo final)"
+                    color="primary"
+                    class="q-mb-md text-weight-medium"
+                 />
+                 <br />
+                 <q-btn
+                    color="primary"
+                    icon="save_alt"
+                    label="Baixar Arquivo AFD Editado"
+                    size="lg"
+                    unelevated
+                    class="soft-btn soft-btn-primary q-mt-md"
+                    @click="downloadFile"
+                 />
+              </div>
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -105,16 +148,17 @@ import { useGenerator } from 'src/composables/useGenerator'
 import UploadAFD from 'src/components/UploadAFD.vue'
 import AfdTable from 'src/components/AfdTable.vue'
 import ValidationReport from 'src/components/ValidationReport.vue'
+import AfdAdvancedEditor from 'src/components/AfdAdvancedEditor.vue'
 
 export default defineComponent({
   name: 'AnalyzePage',
-  components: { UploadAFD, AfdTable, ValidationReport },
+  components: { UploadAFD, AfdTable, ValidationReport, AfdAdvancedEditor },
   setup() {
     const store = useAfdStore()
     const tab = ref('records')
     
     // Mapeamento para o Breadcrumb do Layout
-    const tabLabels = { records: 'Registros', validation: 'Validações', export: 'Exportar' }
+    const tabLabels = { records: 'Registros', validation: 'Validações', export: 'Exportar', editor: 'Edição Avançada' }
     watch(tab, (newVal) => {
        store.activeTabName = tabLabels[newVal]
     }, { immediate: true })
@@ -141,6 +185,13 @@ export default defineComponent({
        tab.value = 'records'
     }
 
+    const exportFilters = ref({
+       dateStart: '',
+       dateEnd: '',
+       nsrStart: null,
+       nsrEnd: null
+    })
+
     const onFileProcessingStart = () => {
       // Don't close the modal yet, just notify so the user knows it's doing something
       $q.notify({ type: 'info', message: 'Lendo arquivo...', timeout: 1000 })
@@ -153,20 +204,51 @@ export default defineComponent({
 
     const downloadFile = () => {
        try {
-          const content = generateFileContent(store.records, store.portaria, { reindexNsr: store.settings.reindexNsrExport })
-          
-          const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = `exported_afd_${store.portaria}_${Date.now()}.txt`
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          URL.revokeObjectURL(url)
+          $q.loading.show({ message: 'Preparando exportação...' })
 
-          $q.notify({ type: 'positive', message: 'Download iniciado com sucesso!' })
+          setTimeout(() => {
+             // 1. Filtrar a base na Memória antes de gerar o Export String
+             let dataset = store.records
+             
+             if (exportFilters.value.dateStart) {
+                const sd = new Date(exportFilters.value.dateStart + 'T00:00:00')
+                dataset = dataset.filter(r => r.dataHora && r.dataHora >= sd)
+             }
+             if (exportFilters.value.dateEnd) {
+                const ed = new Date(exportFilters.value.dateEnd + 'T23:59:59')
+                dataset = dataset.filter(r => r.dataHora && r.dataHora <= ed)
+             }
+             if (exportFilters.value.nsrStart !== null && exportFilters.value.nsrStart !== '') {
+                const ns = Number(exportFilters.value.nsrStart)
+                dataset = dataset.filter(r => r.nsr && Number(r.nsr) >= ns)
+             }
+             if (exportFilters.value.nsrEnd !== null && exportFilters.value.nsrEnd !== '') {
+                const ne = Number(exportFilters.value.nsrEnd)
+                dataset = dataset.filter(r => r.nsr && Number(r.nsr) <= ne)
+             }
+
+             if (dataset.length === 0) {
+                 $q.loading.hide()
+                 return $q.notify({ type: 'warning', message: 'Os filtros informados excluíram todos os registros. O AFD exportado estaria vazio.' })
+             }
+
+             const content = generateFileContent(dataset, store.portaria, { reindexNsr: store.settings.reindexNsrExport })
+             
+             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+             const url = URL.createObjectURL(blob)
+             const link = document.createElement('a')
+             link.href = url
+             link.download = `exported_afd_${store.portaria}_${Date.now()}.txt`
+             document.body.appendChild(link)
+             link.click()
+             document.body.removeChild(link)
+             URL.revokeObjectURL(url)
+
+             $q.loading.hide()
+             $q.notify({ type: 'positive', message: `${dataset.length} registros exportados com sucesso!` })
+          }, 50)
        } catch (err) {
+          $q.loading.hide()
           $q.notify({ type: 'negative', message: 'Erro ao gerar arquivo: ' + err.message })
        }
     }
@@ -189,7 +271,8 @@ export default defineComponent({
       onFileProcessed,
       downloadFile,
       handleFilterError,
-      handleFilterWarning
+      handleFilterWarning,
+      exportFilters
     }
   }
 })

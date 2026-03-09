@@ -148,8 +148,11 @@ export default defineComponent({
         // Validação em Bulk
         validators.validateBulk(records, portaria, store.settings)
 
-        // Salva na Store
+        // Salva na Store inicial para que a agregação possa iterar
         store.loadParsedRecords(records, portaria, lines, fileName)
+        
+        // Agora calcula e slva os resumos cegos
+        store.computeValidationSummary()
         
         $q.notify({ 
           type: 'positive', 
