@@ -5,6 +5,8 @@ export const useAfdStore = defineStore('afd', {
         // '1510' or '671' or null
         portaria: null,
 
+        isDark: false,
+
         // Array of parsed objects
         records: [],
 

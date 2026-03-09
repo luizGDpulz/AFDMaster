@@ -64,48 +64,82 @@
 [data-theme="dark"] {
     // Brand: defaults para o tema escuro (JS pode sobrescrever)
     --qm-brand: #ffffff;
-    --qm-brand-light: rgba(255, 255, 255, 0.1);
-    --qm-brand-contrast: #1a1a1a;
+    --qm-brand-light: rgba(255, 255, 255, 0.08);
+    --qm-brand-contrast: #181a1b; // Invertido: preto de fundo para botões brancos
 
     // Backgrounds
-    --qm-bg-primary: #0a0a0a;
-    --qm-bg-secondary: #171717;
-    --qm-bg-tertiary: #262626;
+    --qm-bg-primary: #181a1b; // Main Content (como pedido)
+    --qm-bg-secondary: #1e2021; // Fundo Geral (como pedido)
+    --qm-bg-tertiary: #25282a; // Um tom acima para elementos menores
 
     // Surfaces
-    --qm-surface: #171717;
-    --qm-surface-variant: #1f1f1f;
+    --qm-surface: #181a1b; // Cards e painéis no mesmo tom do conteúdo
+    --qm-surface-variant: #222527;
 
     // Textos
     --qm-text-primary: #fafafa;
-    --qm-text-secondary: #a3a3a3;
+    --qm-text-secondary: #aaaaaa;
     --qm-text-muted: #737373;
-    --qm-text-disabled: #525252;
+    --qm-text-disabled: #404040;
 
-    // Bordas
-    --qm-border: #333333;
-    --qm-border-light: #262626;
-    --qm-border-hover: #525252;
+    // Bordas (High Contrast mas com a nova paleta)
+    --qm-border: #333638;
+    --qm-border-light: #2a2d2f;
+    --qm-border-hover: #4d5154;
 
     // Inputs
-    --qm-input-bg: #1f1f1f;
-    --qm-input-border: #525252;
-    --qm-input-border-hover: #737373;
+    --qm-input-bg: #141617;
+    --qm-input-border: #383c3e;
+    --qm-input-border-hover: #4d5154;
     --qm-input-border-focus: var(--qm-brand);
 
     // Botão neutro (branco no dark)
     --qm-btn-primary-bg: #fafafa;
-    --qm-btn-primary-text: #171717;
-    --qm-btn-primary-hover: #e5e5e5;
+    --qm-btn-primary-text: #181a1b;
+    --qm-btn-primary-hover: #ffffff;
 
     // Semânticas
     --qm-error: #f87171;
 
-    // Sombras (mais sutis no dark)
-    --qm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --qm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-    --qm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-    --qm-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+    // Sombras (ajustadas para o novo fundo)
+    --qm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --qm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.5);
+    --qm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+    --qm-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.6);
+
+    // Sobrescritas globais para componentes Quasar no modo escuro
+    .q-stepper,
+    .q-stepper__title,
+    .q-stepper__caption,
+    .text-grey-8,
+    .text-grey-7,
+    .q-stepper__step-inner,
+    .q-table__container,
+    .q-table {
+        color: var(--qm-text-primary) !important;
+    }
+
+    .q-table,
+    .q-table__container,
+    .q-table tbody tr,
+    .q-table tbody td,
+    .q-table thead th,
+    .q-stepper,
+    .q-stepper__header,
+    .q-stepper__step-content,
+    .q-stepper__step-inner {
+        background-color: var(--qm-surface) !important;
+    }
+
+    .q-table tbody tr:hover td {
+        background-color: var(--qm-surface-variant) !important;
+    }
+
+    .text-grey,
+    .q-stepper__caption,
+    .text-grey-6 {
+        color: var(--qm-text-secondary) !important;
+    }
 }
 
 // ===== RESET/BASE =====

@@ -67,7 +67,7 @@
                      min="0" 
                      max="60"
                      suffix="min"
-                     class="soft-input bg-white"
+                     class="soft-input"
                   />
                 </q-item-section>
               </q-item>

@@ -15,18 +15,18 @@
               v-model="tipoFiltro"
               :options="tipoOptions"
               label="Filtrar por Tipo"
-              class="soft-input bg-white"
+              class="soft-input"
               emit-value map-options
            />
         </div>
         <div class="col-12 col-md-2">
-           <q-input dense outlined v-model="dataInicio" type="date" label="Data Início" class="soft-input bg-white" />
+           <q-input dense outlined v-model="dataInicio" type="date" label="Data Início" class="soft-input" />
         </div>
         <div class="col-12 col-md-2">
-           <q-input dense outlined v-model="dataFim" type="date" label="Data Fim" class="soft-input bg-white" />
+           <q-input dense outlined v-model="dataFim" type="date" label="Data Fim" class="soft-input" />
         </div>
         <div class="col-12 col-md-5 row justify-end items-center">
-            <q-input dense outlined v-model="localSearchQuery" @update:model-value="onSearchInput" placeholder="Buscar: NSR, CPF, nome..." class="q-mr-sm soft-input bg-white" style="flex-grow: 1;">
+            <q-input dense outlined v-model="localSearchQuery" @update:model-value="onSearchInput" placeholder="Buscar: NSR, CPF, nome..." class="q-mr-sm soft-input" style="flex-grow: 1;">
               <template v-slot:append>
                 <q-icon name="search" />
               </template>
@@ -58,6 +58,7 @@
 
       <q-table
         flat bordered
+        :dark="store.isDark"
         :rows="store.records"
         :columns="columns"
         row-key="id"
@@ -663,8 +664,8 @@ export default defineComponent({
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #fff;
-  border-bottom: 2px solid #e0e0e0;
+  background: var(--qm-surface);
+  border-bottom: 2px solid var(--qm-border);
   font-weight: 700;
   font-size: 0.78rem;
   text-transform: uppercase;
@@ -681,15 +682,15 @@ export default defineComponent({
   transition: background-color 0.1s ease;
 }
 .table-row:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: var(--qm-hover-bg, rgba(255, 255, 255, 0.05));
 }
 .row-expanded {
-  background-color: rgba(21, 101, 192, 0.06) !important;
+  background-color: var(--qm-primary-muted, rgba(255, 255, 255, 0.08)) !important;
 }
 
 /* Linha selecionada */
 .sticky-header-table :deep(tbody tr.row-selected) {
-  background-color: rgba(21, 101, 192, 0.07) !important;
+  background-color: var(--qm-primary-muted, rgba(255, 255, 255, 0.1)) !important;
 }
 
 /* ── Expansão inline ───────────────────────────────────────────────────── */
@@ -702,9 +703,9 @@ export default defineComponent({
 }
 
 .expansion-panel {
-  border-top: 2px solid #1565C0;
-  border-bottom: 1px solid #e8eaf6;
-  background: linear-gradient(to bottom, #f3f6fd, #ffffff);
+  border-top: 2px solid var(--qm-primary, #1565C0);
+  border-bottom: 1px solid var(--qm-border-light, #2a2d2f);
+  background: var(--qm-surface);
   padding: 14px 20px 16px;
   animation: slideDown 0.18s ease;
 }
@@ -744,13 +745,13 @@ export default defineComponent({
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #9e9e9e;
+  color: var(--qm-text-muted, #9e9e9e);
   white-space: nowrap;
 }
 
 .exp-value {
   font-size: 0.9rem;
-  color: #212121;
+  color: var(--qm-text, #212121);
   /* Quebra texto longo no limite da célula */
   word-break: break-word;
   overflow-wrap: break-word;
@@ -760,8 +761,8 @@ export default defineComponent({
 /* ── Fuso chip ─────────────────────────────────────────────────────────── */
 .fuso-chip {
   display: inline-block;
-  background: #e8eaf6;
-  color: #3949ab;
+  background: var(--qm-bg-tertiary, #25282a);
+  color: var(--qm-text-primary, #fff);
   border-radius: 4px;
   font-size: 0.72rem;
   font-weight: 600;
@@ -772,17 +773,17 @@ export default defineComponent({
 
 /* ── Raw line ──────────────────────────────────────────────────────────── */
 .exp-raw {
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--qm-border-light, #e0e0e0);
   padding-top: 10px;
 }
 
 .raw-line {
   font-family: 'Roboto Mono', 'Courier New', monospace;
   font-size: 0.72rem;
-  color: #607d8b;
+  color: var(--qm-text-muted, #737373);
   word-break: break-all;
   margin-top: 4px;
-  background: #f5f5f5;
+  background: var(--qm-bg-tertiary, #25282a);
   padding: 6px 10px;
   border-radius: 4px;
   line-height: 1.6;
@@ -807,7 +808,7 @@ export default defineComponent({
   height: 18px;
   font-size: 0.82rem;
   line-height: 1;
-  color: #9e9e9e;
+  color: var(--qm-text-muted, #9e9e9e);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -824,8 +825,8 @@ export default defineComponent({
 }
 
 .copy-btn:hover {
-  color: #1565c0;
-  background: rgba(21, 101, 192, 0.08);
+  color: var(--qm-primary, #1565c0);
+  background: var(--qm-hover-bg, rgba(21, 101, 192, 0.08));
 }
 
 .modal-slide-card {

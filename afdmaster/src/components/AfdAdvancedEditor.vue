@@ -20,7 +20,7 @@
                 outlined dense 
                 v-model="replaceForm.from" 
                 label="PIS/CPF Incorreto (Localizar)" 
-                class="soft-input bg-white" 
+                class="soft-input" 
                 :rules="[val => !!val || 'Campo obrigatório']"
                 mask="###############"
                 unmasked-value
@@ -29,7 +29,7 @@
                 outlined dense 
                 v-model="replaceForm.to" 
                 label="PIS/CPF Correto (Substituir por)" 
-                class="soft-input bg-white"
+                class="soft-input"
                 :rules="[val => !!val || 'Campo obrigatório']"
                 mask="###############"
                 unmasked-value
@@ -67,7 +67,7 @@
                 v-model.number="nsrForm.target" 
                 type="number"
                 label="NSR Alvo" 
-                class="soft-input bg-white" 
+                class="soft-input" 
                 :rules="[val => !!val || 'Campo obrigatório']"
               />
               

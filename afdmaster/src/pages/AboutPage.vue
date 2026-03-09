@@ -2,12 +2,9 @@
   <q-page class="fade-in q-px-lg q-pt-sm q-pb-xs column flex-center">
     
     <div class="about-container text-center">
-       <q-avatar size="120px" class="shadow-4 q-mb-md">
-          <!-- Você pode hospedar sua foto ou usar uma imagem genérica/placeholder. Usaremos um icone bonito pelo momento -->
-          <div class="bg-primary fit text-white flex flex-center">
-             <q-icon name="engineering" size="64px" />
-          </div>
-       </q-avatar>
+        <q-avatar size="140px" square class="q-mb-md">
+           <img :src="store.isDark ? '/app-logo-dark.svg' : '/app-logo.png'" alt="Logo AFDMaster" />
+        </q-avatar>
 
        <div class="text-h4 text-weight-bold text-primary q-mb-sm">AFDMaster</div>
        <div class="text-subtitle1 text-grey-7 q-mb-lg">
@@ -57,11 +54,13 @@
 
 <script>
 import { defineComponent } from 'vue'
+import { useAfdStore } from 'src/stores/afdStore'
 
 export default defineComponent({
   name: 'AboutPage',
   setup() {
-    return {}
+    const store = useAfdStore()
+    return { store }
   }
 })
 </script>

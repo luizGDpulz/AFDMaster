@@ -594,22 +594,22 @@ export default defineComponent({
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #78909c;
+  color: var(--qm-text-muted, #78909c);
   margin-bottom: 2px;
   padding-left: 4px;
 }
 
 .detail-value {
   font-size: 0.9rem;
-  color: #263238;
-  background-color: #f5f7fa;
+  color: var(--qm-text, #263238);
+  background-color: var(--qm-surface, #f5f7fa);
   padding: 6px 14px;
   border-radius: 24px;
   display: inline-block;
   word-break: break-word;
   overflow-wrap: break-word;
   font-weight: 500;
-  border: 1px solid #eceff1;
+  border: 1px solid var(--qm-border-light, #eceff1);
 }
 
 .detail-value.text-negative {
@@ -623,15 +623,15 @@ export default defineComponent({
 /* ── Fuso chip ── */
 .fuso-chip {
   display: inline-block;
-  background: #e3f2fd;
-  color: #1565c0;
+  background: var(--qm-surface, #e3f2fd);
+  color: var(--qm-primary, #1565c0);
   border-radius: 24px;
   font-size: 0.85rem;
   font-weight: 700;
   font-family: 'Roboto Mono', monospace;
   padding: 6px 14px;
   letter-spacing: 0.03em;
-  border: 1px solid #bbdefb;
+  border: 1px solid var(--qm-border-light, #bbdefb);
   width: fit-content;
 }
 
@@ -642,9 +642,9 @@ export default defineComponent({
 .raw-line {
   word-break: break-all;
   border-radius: 12px;
-  border: 1px solid #cfd8dc;
-  color: #546e7a;
-  background-color: #eceff1 !important;
+  border: 1px solid var(--qm-border-light, #cfd8dc);
+  color: var(--qm-text-muted, #546e7a);
+  background-color: var(--qm-surface, #eceff1) !important;
   line-height: 1.6;
 }
 </style>

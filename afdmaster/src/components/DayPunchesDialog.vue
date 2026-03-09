@@ -12,7 +12,7 @@
       <q-separator class="q-mt-sm" />
       
       <q-card-section class="q-pa-md bg-grey-1" style="max-height: 60vh; overflow-y: auto;">
-         <q-list separator class="bg-white rounded-borders shadow-1">
+         <q-list separator class="rounded-borders shadow-1 bg-surface">
             <q-item v-for="(punch, idx) in punches" :key="idx" clickable v-ripple>
                <q-item-section avatar style="min-width: 100px; padding-right: 16px;">
                   <q-chip :color="punch.ordemPar && punch.ordemPar.startsWith('Entrada') ? 'green-2' : 'orange-2'" text-color="black" size="sm" class="text-weight-bold shadow-1" style="width: 85px; justify-content: center; margin: 0;">

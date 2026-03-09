@@ -1,0 +1,23 @@
+<svg width="1024" height="1024" viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(25, 5)">
+    <!-- Background shell - Symmetric Rounded Rectangle -->
+    <!-- y start: 0, height: 215. x start: 16, width: 168 -->
+    <path d="M16 10C16 4.47715 20.4772 0 26 0H174C179.523 0 184 4.47715 184 10V220C184 225.523 179.523 230 174 230H26C20.4772 230 16 225.523 16 220V10Z" fill="black"/>
+    
+    <!-- Content area (white part) - Starts at y=60 instead of 75 -->
+    <!-- Stroke 8 means visual edge is 20-4=16 to 180+4=184 -->
+    <path d="M20 60H180V220C180 231.046 171.046 240 160 240H40C28.9543 240 20 231.046 20 220V60Z" fill="white" stroke="black" stroke-width="8"/>
+    
+    <!-- AFD Text - Now centered at x=100 in the 16-184 range -->
+    <text x="100" y="42" fill="white" font-family="Arial, sans-serif" font-size="38" font-weight="bold" text-anchor="middle">AFD</text>
+    
+    <!-- Inner document icon - Shifted up by 15px (starts at 100 instead of 115) -->
+    <rect x="55" y="100" width="90" height="110" rx="8" stroke="black" stroke-width="6"/>
+    <path d="M115 100L145 130H123C118.582 130 115 126.418 115 122V100Z" fill="black"/>
+    
+    <!-- Document lines - Shifted up by 15px -->
+    <line x1="75" y1="150" x2="125" y2="150" stroke="black" stroke-width="6" stroke-linecap="round"/>
+    <line x1="75" y1="170" x2="125" y2="170" stroke="black" stroke-width="6" stroke-linecap="round"/>
+    <line x1="75" y1="190" x2="110" y2="190" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>

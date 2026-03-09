@@ -104,15 +104,15 @@ export default defineComponent({
     })
 
     // ===== THEME =====
-    const isDark = ref(false)
+    const isDark = computed(() => store.isDark)
 
     const applyTheme = () => {
-      document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+      document.documentElement.setAttribute('data-theme', store.isDark ? 'dark' : 'light')
     }
 
     const toggleTheme = () => {
-      isDark.value = !isDark.value
-      localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+      store.isDark = !store.isDark
+      localStorage.setItem('theme', store.isDark ? 'dark' : 'light')
       applyTheme()
       loadBrandColor()
     }
@@ -121,9 +121,9 @@ export default defineComponent({
       // Load theme
       const savedTheme = localStorage.getItem('theme')
       if (savedTheme) {
-        isDark.value = savedTheme === 'dark'
+        store.isDark = savedTheme === 'dark'
       } else {
-        isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+        store.isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       }
       applyTheme()
       loadBrandColor()

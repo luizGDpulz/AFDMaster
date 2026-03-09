@@ -18,11 +18,11 @@
 
     <!-- Empty State -->
     <div v-if="!store.hasRecords" class="flex flex-center q-pa-xl" style="height: 60vh;">
-      <div class="text-center text-grey-6">
-        <q-icon name="document_scanner" size="64px" class="q-mb-md" />
-        <div class="text-h6 text-weight-bold">Nenhum arquivo em análise</div>
-        <div class="text-subtitle1 q-mt-sm">Clique em "Importar AFD" no topo para começar.</div>
-      </div>
+       <div class="text-center text-grey-6">
+         <img :src="store.isDark ? '/app-logo-dark.svg' : '/app-logo.svg'" style="width: 128px; height: 128px; opacity: 0.6;" class="q-mb-md" alt="Logo AFDMaster" />
+         <div class="text-h6 text-weight-bold">Nenhum arquivo em análise</div>
+         <div class="text-subtitle1 q-mt-sm">Clique em "Importar AFD" no topo para começar.</div>
+       </div>
     </div>
 
     <!-- Data State -->
@@ -37,10 +37,10 @@
           align="left"
           narrow-indicator
         >
-          <q-tab name="records" class="rounded-pill q-mx-sm" icon="table_view" label="Registros" />
-          <q-tab name="validation" class="rounded-pill q-mx-sm" icon="rule" label="Validações" />
-          <q-tab name="editor" class="rounded-pill q-mx-sm" icon="edit_document" label="Edição/Lote" />
-          <q-tab name="export" class="rounded-pill q-mx-sm" icon="file_download" label="Exportar" />
+          <q-tab name="records" class="q-mx-sm" icon="table_view" label="Registros" />
+          <q-tab name="validation" class="q-mx-sm" icon="rule" label="Validações" />
+          <q-tab name="editor" class="q-mx-sm" icon="edit_document" label="Edição/Lote" />
+          <q-tab name="export" class="q-mx-sm" icon="file_download" label="Exportar" />
         </q-tabs>
 
         <q-separator />
@@ -73,10 +73,10 @@
                           <div class="text-subtitle2 q-mb-sm text-primary">Intervalo de Data</div>
                           <div class="row q-col-gutter-sm">
                              <div class="col-6">
-                                <q-input dense outlined v-model="exportFilters.dateStart" type="date" label="A Partir De" class="soft-input bg-white" />
+                                <q-input dense outlined v-model="exportFilters.dateStart" type="date" label="A Partir De" class="soft-input" />
                              </div>
                              <div class="col-6">
-                                <q-input dense outlined v-model="exportFilters.dateEnd" type="date" label="Até" class="soft-input bg-white" />
+                                <q-input dense outlined v-model="exportFilters.dateEnd" type="date" label="Até" class="soft-input" />
                              </div>
                           </div>
                        </q-card-section>
@@ -88,10 +88,10 @@
                           <div class="text-subtitle2 q-mb-sm text-warning-dark">Intervalo de NSR</div>
                           <div class="row q-col-gutter-sm">
                              <div class="col-6">
-                                <q-input dense outlined v-model.number="exportFilters.nsrStart" type="number" label="NSR Mínimo" class="soft-input bg-white" />
+                                <q-input dense outlined v-model.number="exportFilters.nsrStart" type="number" label="NSR Mínimo" class="soft-input" />
                              </div>
                              <div class="col-6">
-                                <q-input dense outlined v-model.number="exportFilters.nsrEnd" type="number" label="NSR Máximo" class="soft-input bg-white" />
+                                <q-input dense outlined v-model.number="exportFilters.nsrEnd" type="number" label="NSR Máximo" class="soft-input" />
                              </div>
                           </div>
                        </q-card-section>

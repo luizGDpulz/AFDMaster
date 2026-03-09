@@ -34,7 +34,7 @@
                  v-model="genConfig.portaria" 
                  :options="portariaOptions" 
                  label="Selecione a Portaria (1510 ou 671)" 
-                 class="soft-input bg-white" 
+                 class="soft-input " 
                  emit-value map-options
               />
            </div>
@@ -43,11 +43,11 @@
         <div class="row q-col-gutter-sm q-mb-xs">
            <div class="col-12 col-md-6">
               <div class="text-subtitle2 q-mb-xs text-grey-8">Período de Extração (Início)</div>
-              <q-input outlined dense v-model="genConfig.dateStart" type="date" class="soft-input bg-white" />
+              <q-input outlined dense v-model="genConfig.dateStart" type="date" class="soft-input" />
            </div>
            <div class="col-12 col-md-6">
               <div class="text-subtitle2 q-mb-xs text-grey-8">Período de Extração (Fim)</div>
-              <q-input outlined dense v-model="genConfig.dateEnd" type="date" class="soft-input bg-white" />
+              <q-input outlined dense v-model="genConfig.dateEnd" type="date" class="soft-input" />
            </div>
         </div>
 
@@ -137,14 +137,14 @@
         </div>
 
         <q-list separator>
-           <q-item v-for="(emp, i) in genConfig.employees" :key="i" class="q-pa-md bg-grey-1 rounded-borders q-mb-sm">
+           <q-item v-for="(emp, i) in genConfig.employees" :key="i" class="q-pa-md bg-surface rounded-borders q-mb-sm" style="border: 1px solid var(--qm-border-light);">
               <q-item-section>
                  <div class="row q-col-gutter-md items-end">
                     <div class="col-12 col-md-5">
-                       <q-input outlined dense v-model="emp.name" label="NOME DO FUNCIONÁRIO" class="bg-white soft-input" />
+                       <q-input outlined dense v-model="emp.name" label="NOME DO FUNCIONÁRIO" class="soft-input" />
                     </div>
                     <div class="col-12 col-md-3">
-                       <q-input outlined dense v-model="emp.pis" label="PIS" class="bg-white soft-input" />
+                       <q-input outlined dense v-model="emp.pis" label="PIS" class="soft-input" />
                     </div>
                     <div class="col-12 col-md-1">
                        <q-btn icon="delete" color="negative" flat round @click="removeEmployee(i)" />
@@ -152,7 +152,7 @@
                  </div>
 
                  <!-- Array de Pares de Marcação do Dia Para Esse Funcionario -->
-                 <div class="q-mt-md q-pa-sm rounded-borders" style="border: 1px dashed #ccc;">
+                 <div class="q-mt-md q-pa-sm rounded-borders bg-surface" style="border: 1px dashed var(--qm-border-light);">
                     <div class="text-caption text-grey-8 q-mb-sm row justify-between items-center">
                        <span>Horários da Jornada (Gerações diárias para cada dia do Período):</span>
                        <q-btn size="sm" icon="add_time" flat color="primary" label="Novo Horário" @click="addPunchToEmp(emp)" />
@@ -160,7 +160,7 @@
                     
                     <div class="row q-gutter-sm">
                        <div v-for="(punch, pIdx) in emp.punches" :key="pIdx" class="row items-center no-wrap">
-                          <q-input outlined dense type="time" v-model="emp.punches[pIdx]" style="width: 110px;" class="bg-white soft-input" />
+                          <q-input outlined dense type="time" v-model="emp.punches[pIdx]" style="width: 110px;" class="soft-input" />
                           <q-btn icon="close" size="sm" flat round color="grey" @click="emp.punches.splice(pIdx, 1)" />
                        </div>
                     </div>
@@ -596,7 +596,7 @@ export default defineComponent({
 .stepper-navigation-footer {
   flex-shrink: 0;
   padding: 0 8px 8px 8px; /* Thinner vertically */
-  background: white;
+  background: var(--qm-surface);
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
 }
