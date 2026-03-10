@@ -11,7 +11,7 @@
           Ferramenta avançada para validação e manutenção de Arquivos Fonte de Dados (AFD).
        </div>
 
-       <q-card class="soft-card q-mb-xl text-left">
+       <q-card class="soft-card q-mb-xl text-center">
           <q-card-section>
              <div class="text-h6 q-mb-md">Sobre o Desenvolvedor</div>
              <p class="text-body1 text-grey-8">
@@ -22,23 +22,31 @@
           <q-separator inset />
           
           <q-card-section class="q-pt-md">
-             <div class="row q-gutter-md justify-center">
+             <div class="col q-gutter-md justify-center">
                 <q-btn 
-                   flat 
-                   color="primary" 
-                   icon="email" 
-                   label="Contato por E-mail"
-                   href="mailto:luizgustavodiaspulz@gmail.com"
-                   target="_blank"
-                />
-                <q-btn 
-                   flat 
-                   color="grey-9" 
-                   icon="code" 
-                   label="GitHub"
-                   href="https://github.com/luizGDpulz"
-                   target="_blank"
-                />
+                  flat 
+                  color="primary" 
+                  icon="email" 
+                  label="Contato por E-mail"
+                  href="mailto:luizgustavodiaspulz@gmail.com"
+                  target="_blank"
+               />
+               <q-btn 
+                  flat 
+                  color="grey-9" 
+                  icon="code" 
+                  label="GitHub do Projeto"
+                  href="https://github.com/luizGDpulz/AFDMaster"
+                  target="_blank"
+               />
+               <q-btn 
+                  flat 
+                  color="black" 
+                  icon="person" 
+                  label="Meu Perfil no GitHub"
+                  href="https://github.com/luizGDpulz"
+                  target="_blank"
+               />
              </div>
           </q-card-section>
        </q-card>

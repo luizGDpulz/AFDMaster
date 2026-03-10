@@ -28,12 +28,12 @@
         <div class="col-12 col-md-5 row justify-end items-center">
             <q-input dense outlined v-model="localSearchQuery" @update:model-value="onSearchInput" placeholder="Buscar: NSR, CPF, nome..." class="q-mr-sm soft-input" style="flex-grow: 1;">
               <template v-slot:append>
-                <q-icon name="search" />
+                <q-icon name="search" class="q-icon-ondark"/>
               </template>
             </q-input>
             <q-btn-dropdown
                 unelevated
-                class="soft-btn"
+                class="soft-btn q-icon-onwhite"
                 :color="statusFilterColor"
                 :icon="statusFilterIcon"
                 no-icon-animation

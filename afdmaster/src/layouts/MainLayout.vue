@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh LpR lff" class="main-layout">
+  <q-layout :view="layoutView" class="main-layout">
     
     <!-- ===== SIDEBAR (Menu Lateral) ===== -->
     <q-drawer
@@ -41,18 +41,6 @@
           </template>
         </nav>
       </div>
-
-      <div class="header-right">
-        <!-- Botões de Ação Rápida -->
-        <q-btn
-          v-if="hasRecords"
-          unelevated
-          class="soft-btn soft-btn-primary"
-          icon="file_download"
-          label="Exportar"
-          to="/export"
-        />
-      </div>
     </q-header>
 
     <!-- ===== CONTEÚDO PRINCIPAL ===== -->
@@ -83,6 +71,12 @@ export default defineComponent({
   setup() {
     const route = useRoute()
     const store = useAfdStore()
+
+    const layoutView = computed(() => {
+      // Se na página de docs, o header acompanha o scroll (lhh)
+      // Nas outras, o header fica fixo (lHh)
+      return route.path.startsWith('/docs') ? 'lhh LpR lff' : 'lHh LpR lff'
+    })
 
     // ===== SIDEBAR =====
     const sidebarOpen = ref(true)
@@ -138,7 +132,8 @@ export default defineComponent({
       isDark,
       toggleTheme,
       hasRecords,
-      store
+      store,
+      layoutView
     }
   }
 })

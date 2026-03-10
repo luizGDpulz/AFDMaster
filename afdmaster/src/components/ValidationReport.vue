@@ -58,7 +58,7 @@
                   >
                      <q-item-section>
                        <q-item-label>{{ errorMsg }}</q-item-label>
-                       <q-item-label caption class="text-primary cursor-pointer row items-center q-mt-xs">
+                       <q-item-label caption class="text-secondary cursor-pointer row items-center q-mt-xs">
                          <q-icon name="search" size="xs" class="q-mr-xs" />
                          Visualizar os registros com este erro
                        </q-item-label>
@@ -89,7 +89,7 @@
                   >
                      <q-item-section>
                        <q-item-label>{{ warnMsg }}</q-item-label>
-                       <q-item-label caption class="text-warning-dark cursor-pointer row items-center q-mt-xs">
+                       <q-item-label caption class="text-secondary cursor-pointer row items-center q-mt-xs">
                          <q-icon name="search" size="xs" class="q-mr-xs" />
                          Visualizar os registros com este aviso
                        </q-item-label>

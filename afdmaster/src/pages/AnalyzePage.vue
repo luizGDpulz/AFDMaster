@@ -18,8 +18,8 @@
 
     <!-- Empty State -->
     <div v-if="!store.hasRecords" class="flex flex-center q-pa-xl" style="height: 60vh;">
-       <div class="text-center text-grey-6">
-         <img :src="store.isDark ? '/app-logo-dark.svg' : '/app-logo.svg'" style="width: 128px; height: 128px; opacity: 0.6;" class="q-mb-md" alt="Logo AFDMaster" />
+       <div class="text-center text-primary">
+         <img :src="store.isDark ? '/app-logo-dark.svg' : '/app-logo.svg'" style="width: 128px; height: 128px; opacity: 1;" class="q-mb-md" alt="Logo AFDMaster" />
          <div class="text-h6 text-weight-bold">Nenhum arquivo em análise</div>
          <div class="text-subtitle1 q-mt-sm">Clique em "Importar AFD" no topo para começar.</div>
        </div>

@@ -31,7 +31,9 @@
          </q-item-section>
          <q-item-section class="text-left">
            <q-item-label class="text-weight-bold ellipsis">{{ selectedFile.name }}</q-item-label>
-           <q-item-label caption>{{ (selectedFile.size / 1024).toFixed(2) }} KB</q-item-label>
+           <q-item-label caption class="text-grey-6">
+             {{ (selectedFile.size / 1024).toFixed(2) }} KB
+           </q-item-label>
          </q-item-section>
          <q-item-section side>
            <q-btn icon="close" flat round dense color="negative" @click="clearFile" :disable="isProcessing || isFinished" />

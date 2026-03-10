@@ -22,7 +22,7 @@
         title="Formato e Estrutura"
         icon="settings"
         :done="step > 1"
-        class="stepper-step-body"
+        class="stepper-step-body text-grey-8"
       >
         <div class="text-subtitle1 q-mb-md text-weight-medium">Selecione o Formato do Arquivo Fonte de Dados</div>
         
@@ -59,7 +59,7 @@
               </q-item-section>
               <q-item-section>
                  <q-item-label>Cabeçalho (Header)</q-item-label>
-                 <q-item-label caption>Gera o registro inicial contendo informações obrigatórias da empresa e do REP.</q-item-label>
+                 <q-item-label caption class="text-grey-6">Gera o registro inicial contendo informações obrigatórias da empresa e do REP.</q-item-label>
               </q-item-section>
            </q-item>
            <q-item tag="label" v-ripple>
@@ -68,7 +68,7 @@
               </q-item-section>
               <q-item-section>
                  <q-item-label>Trailer (Rodapé)</q-item-label>
-                 <q-item-label caption>Gera o registro final de consolidação na última linha do arquivo.</q-item-label>
+                 <q-item-label caption class="text-grey-6">Gera o registro final de consolidação na última linha do arquivo.</q-item-label>
               </q-item-section>
            </q-item>
            <q-item tag="label" v-ripple>
@@ -77,13 +77,13 @@
               </q-item-section>
               <q-item-section>
                  <q-item-label>Adicionar CRC-16 (Kermit)</q-item-label>
-                 <q-item-label caption>Anexa o código de verificação de 4 dígitos (ex: 4A8F) ao final de cada registro.</q-item-label>
+                 <q-item-label caption class="text-grey-6">Anexa o código de verificação de 4 dígitos (ex: 4A8F) ao final de cada registro.</q-item-label>
               </q-item-section>
            </q-item>
         </q-list>
 
         <!-- Preview Text -->
-        <q-card flat bordered class="q-pa-md bg-dark text-white rounded-borders q-mt-md">
+        <q-card flat bordered class="q-pa-md bg-dark text-white rounded-borders q-mt-md" style="border-color: var(--qm-border);">
            <div class="text-subtitle2 q-mb-sm text-weight-bold row items-center">
               <q-icon name="visibility" class="q-mr-sm" /> Preview Transparente do Arquivo
            </div>
@@ -185,7 +185,7 @@
 
         <q-card flat bordered class="soft-card q-pa-lg text-center" style="max-width: 500px; margin: 0 auto;">
            <div class="text-h4 text-primary text-weight-bold q-mb-sm">{{ genConfig.varianceMinutes }} Minutos</div>
-           <div class="text-subtitle2 q-mb-lg text-grey">Para mais (+) ou para menos (-) em cada batida</div>
+           <div class="text-subtitle2 q-mb-lg text-grey-8">Para mais (+) ou para menos (-) em cada batida</div>
            
            <q-slider
               v-model="genConfig.varianceMinutes"
@@ -196,7 +196,7 @@
               label-always
               color="primary"
            />
-           <div class="text-caption q-mt-md text-grey">Exemplo com Base 08:00 e Variância 5: Randomiza entre 07:55 e 08:05.</div>
+           <div class="text-caption q-mt-md text-grey-8">Exemplo com Base 08:00 e Variância 5: Randomiza entre 07:55 e 08:05.</div>
         </q-card>
       </q-step>
 
@@ -599,5 +599,54 @@ export default defineComponent({
   background: var(--qm-surface);
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
+}
+
+/* Aumentar o tamanho dos itens do Header do Stepper */
+.custom-scrolling-stepper :deep(.q-stepper__title) {
+  font-size: 16px; /* Aumenta o titulo */
+  font-weight: 600;
+}
+
+.custom-scrolling-stepper :deep(.q-stepper__caption) {
+  font-size: 13px; /* Aumenta a legenda */
+}
+
+.custom-scrolling-stepper :deep(.q-stepper__dot) {
+  font-size: 28px; /* Aumenta o icone/circulo */
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+}
+
+.custom-scrolling-stepper :deep(.q-stepper__tab) {
+  padding: 16px 24px; /* Mais espaço pra clique */
+}
+
+/* Customização da linha que conecta os steps */
+/* Customização da linha que conecta os steps */
+.custom-scrolling-stepper :deep(.q-stepper__tab:before),
+.custom-scrolling-stepper :deep(.q-stepper__tab:after) {
+   display: none !important;
+}
+
+.custom-scrolling-stepper :deep(.q-stepper__line:before),
+.custom-scrolling-stepper :deep(.q-stepper__line:after) {
+  height: 2px !important;
+  background-color: var(--qm-border-hover) !important;
+  min-height: 2px !important;
+}
+
+/* Modifica diretamente a barra/trilho (rail) que o vue adiciona via flex */
+.custom-scrolling-stepper :deep(.q-stepper__tab--active ~ .q-stepper__tab > .q-stepper__dot:before),
+.custom-scrolling-stepper :deep(.q-stepper__tab--done + .q-stepper__tab > .q-stepper__dot:before),
+.custom-scrolling-stepper :deep(.q-stepper__tab--done ~ .q-stepper__tab > .q-stepper__dot:before) {
+   background-color: var(--qm-border-hover) !important;
+   height: 2px !important;
+}
+
+/* Força absoluta para qualquer linha renderizada horizontalmente dentro deste Stepper */
+.custom-scrolling-stepper.q-stepper--horizontal :deep(.q-stepper__line:before),
+.custom-scrolling-stepper.q-stepper--horizontal :deep(.q-stepper__line:after) {
+  background: var(--qm-border-hover) !important;
 }
 </style>

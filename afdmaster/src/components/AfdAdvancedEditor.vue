@@ -11,11 +11,11 @@
                <q-icon name="find_replace" class="q-mr-sm" /> 
                Substituição em Lote (PIS / CPF)
             </div>
-            <div class="text-caption text-grey-7 q-mb-md">
+            <div class="text-caption text-grey-7 q-mt-sm">
                Troca rapidamente a identificação de um funcionário em todas as suas batidas. Útil quando um colaborador registrou o ponto com o crachá/identificação incorreta.
             </div>
             
-            <q-form @submit.prevent="applyReplace" class="q-gutter-md">
+            <q-form @submit.prevent="applyReplace" class="q-gutter-md q-mt-md">
               <q-input 
                 outlined dense 
                 v-model="replaceForm.from" 
@@ -57,11 +57,11 @@
                <q-icon name="format_list_numbered" class="q-mr-sm" /> 
                Gerenciamento de NSR
             </div>
-            <div class="text-caption text-grey-7 q-mb-md">
+            <div class="text-caption text-grey-7 q-mt-sm">
                Invalide ou recalcule o Número Sequencial de Registro (NSR). O recálculo afeta a linha selecionada em diante na exportação, caso a "Reindexação" esteja ativa. Remove o NSR fisicamente da linha atual.
             </div>
 
-            <q-form @submit.prevent="applyNsrAction" class="q-gutter-md">
+            <q-form @submit.prevent="applyNsrAction" class="q-gutter-md q-mt-md">
                <q-input 
                 outlined dense 
                 v-model.number="nsrForm.target" 

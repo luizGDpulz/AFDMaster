@@ -1,5 +1,5 @@
 <template>
-  <q-page class="fade-in q-px-lg q-pt-sm q-pb-xs column">
+  <q-page class="fade-in q-px-lg q-pt-sm q-pb-xs">
     
     <!-- Cabeçalho da Página -->
     <div class="row items-center q-mb-md">
@@ -9,26 +9,26 @@
     </div>
 
     <!-- Container Principal com Tabs -->
-    <q-card flat bordered class="soft-card col column">
+    <q-card flat bordered class="soft-card">
       <q-tabs
         v-model="tab"
         dense
-        class="text-grey"
+        class="text-grey q-my-sm"
         active-color="primary"
         indicator-color="primary"
         align="left"
         narrow-indicator
       >
-        <q-tab name="md_1510" label="Portaria 1510 (Resumo)" icon="article" />
-        <q-tab name="md_671" label="Portaria 671 (Resumo)" icon="article" />
-        <q-tab name="md_tipos" label="Tipos de REP (671)" icon="account_tree" />
-        <q-tab name="md_crc" label="Cálculo CRC" icon="calculate" />
-        <q-tab name="md_portaria" label="Portaria 1510 (Completo)" icon="gavel" />
+        <q-tab name="md_671" class="q-mx-sm" label="Portaria 671" icon="article" />
+        <q-tab name="md_1510" class="q-mx-sm" label="Portaria 1510" icon="article" />
+        <q-tab name="md_tipos" class="q-mx-sm" label="Tipos de REP (671)" icon="account_tree" />
+        <q-tab name="md_crc" class="q-mx-sm" label="Cálculo CRC" icon="calculate" />
+        <q-tab name="md_portaria" class="q-mx-sm" label="Portaria 1510 (Completo)" icon="gavel" />
       </q-tabs>
 
       <q-separator />
 
-      <q-tab-panels v-model="tab" animated class="col scroll q-pa-md doc-panel">
+      <q-tab-panels v-model="tab" animated class="doc-panel">
         <q-tab-panel v-for="doc in documents" :key="doc.id" :name="doc.id">
            <div v-if="doc.loading" class="flex flex-center q-pa-xl">
               <q-spinner-dots color="primary" size="40px" />
@@ -52,13 +52,13 @@ import { marked } from 'marked'
 export default defineComponent({
   name: 'DocsPage',
   setup() {
-    const tab = ref('md_1510')
+    const tab = ref('md_671')
 
     const documents = ref({
-       md_1510:   { id: 'md_1510', filename: 'ManualAFD1510.md', htmlContent: '', loading: true, error: false },
        md_671:    { id: 'md_671', filename: 'ManualAFD671.md', htmlContent: '', loading: true, error: false },
+       md_1510:   { id: 'md_1510', filename: 'ManualAFD1510.md', htmlContent: '', loading: true, error: false },
        md_tipos:  { id: 'md_tipos', filename: 'TiposAFD671.md', htmlContent: '', loading: true, error: false },
-       md_crc:    { id: 'md_crc', filename: 'CRC_CALCULO.md', htmlContent: '', loading: true, error: false },
+       md_crc:    { id: 'md_crc', filename: 'CalculoDoCRC.md', htmlContent: '', loading: true, error: false },
        md_portaria: { id: 'md_portaria', filename: 'Portaria_1510_2009.md', htmlContent: '', loading: true, error: false }
     })
 
