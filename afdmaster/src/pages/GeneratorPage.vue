@@ -1,21 +1,23 @@
 <template>
-  <q-page class="fade-in q-px-lg q-pt-sm q-pb-md column" style="max-height: calc(100vh - 58px);">
+  <q-page class="fade-in q-pt-sm q-pb-md column full-width" style="min-width: 0;">
     
-    <div class="row items-center q-mb-sm">
+    <div class="row items-center q-mb-sm q-px-md" style="min-width: 0;">
       <div class="text-h5 text-weight-bold row items-center">
         <q-icon name="precision_manufacturing" class="q-mr-sm text-primary" /> Gerador de AFD
       </div>
     </div>
 
-    <q-stepper
-      v-model="step"
-      ref="stepper"
-      color="primary"
-      animated
-      class="soft-card col custom-scrolling-stepper"
-      style="min-height: 0;"
-      contracted
-    >
+    <!-- Container para não grudar na borda, mantendo tudo dentro -->
+    <div class="col flex column no-wrap q-px-md" style="min-height: 0; max-width: 100%;">
+      <q-stepper
+        v-model="step"
+        ref="stepper"
+        color="primary"
+        animated
+        class="soft-card col custom-scrolling-stepper"
+        style="min-height: 0; max-width: 100%; overflow: hidden;"
+        contracted
+      >
       <!-- PASSO 1: Estrutura Base -->
       <q-step
         :name="1"
@@ -34,7 +36,7 @@
                  v-model="genConfig.portaria" 
                  :options="portariaOptions" 
                  label="Selecione a Portaria (1510 ou 671)" 
-                 class="soft-input " 
+                 class="soft-input"
                  emit-value map-options
               />
            </div>
@@ -51,7 +53,7 @@
            </div>
         </div>
 
-        <div class="text-subtitle2 q-mb-xs text-grey-8">Incluir Registros Especiais?</div>
+        <div class="text-subtitle2 q-mb-xs q-mt-md text-grey-8">Incluir Registros Especiais?</div>
         <q-list bordered separator class="rounded-borders q-mb-sm" dense>
            <q-item tag="label" v-ripple>
               <q-item-section avatar>
@@ -90,7 +92,7 @@
            <p class="text-caption text-grey-5 q-mb-md">
               Exemplo do arquivo a ser gerado com base nas suas seleções.
            </p>
-           <pre class="bg-black q-pa-sm rounded-borders" style="font-size: 11px; overflow-x: hidden; margin: 0; white-space: pre-wrap; word-break: break-all;">{{ previewText }}</pre>
+           <pre class="bg-black q-pa-sm rounded-borders" style="font-size: 11px; max-width: 100%; overflow-x: auto; margin: 0; white-space: pre-wrap; word-break: break-all;">{{ previewText }}</pre>
         </q-card>
 
 
@@ -109,16 +111,28 @@
         <p class="text-caption text-grey-7">O Serial do REP é altamente recomendado para arquivos gerados para importação. Os demais campos fiscais foram preenchidos com placeholders válidos.</p>
         
         <div class="row q-col-gutter-md">
+           <!-- Campos Principais -->
            <div class="col-12 col-md-6">
-              <q-input outlined dense v-model="genConfig.header.cnpjCpf" label="CNPJ/CPF do Empregador" class="soft-input" />
+              <q-input outlined dense v-model="genConfig.header.cnpjCpf" label="CNPJ/CPF do Empregador" placeholder="12345678000199" class="soft-input" />
            </div>
            <div class="col-12 col-md-6">
-              <q-input outlined dense v-model="genConfig.header.razaoSocial" label="Razão Social" class="soft-input" />
+              <q-input outlined dense v-model="genConfig.header.razaoSocial" label="Razão Social" placeholder="EMPRESA TESTE DE SOFTWARE LTDA" class="soft-input" />
            </div>
-           
-           <!-- Campos específicos Portaria 671 M/A/P ou 1510 (Serial, CEI, etc) usando V-IF simplificado dependendo da modelagem. No momento pegamos o básico universal -->
            <div class="col-12 col-md-12">
-              <q-input outlined dense v-model="genConfig.header.serialRep" label="Serial do REP" class="soft-input" hint="Obrigatório!" />
+              <q-input outlined dense v-model="genConfig.header.serialRep" label="Serial do REP" placeholder="00000010000123456" class="soft-input" hint="Obrigatório! Identificação de fábrica." />
+           </div>
+
+           <!-- Campos Complementares -->
+           <div class="col-12 q-mt-md">
+              <div class="text-subtitle2 text-grey-6 q-mb-sm">Campos Complementares (Geralmente para Portaria 671)</div>
+              <div class="row q-col-gutter-md">
+                 <div class="col-12 col-md-4">
+                    <q-input outlined dense v-model="genConfig.header.cei" label="CEI / CAEPF / CNO" placeholder="123456789012" class="soft-input" />
+                 </div>
+                 <div class="col-12 col-md-8">
+                    <q-input outlined dense v-model="genConfig.header.endereco" label="Endereço do Local de Trabalho" placeholder="RUA TESTE, 123 - CENTRO" class="soft-input" />
+                 </div>
+              </div>
            </div>
         </div>
       </q-step>
@@ -144,7 +158,7 @@
                        <q-input outlined dense v-model="emp.name" label="NOME DO FUNCIONÁRIO" class="soft-input" />
                     </div>
                     <div class="col-12 col-md-3">
-                       <q-input outlined dense v-model="emp.pis" label="PIS" class="soft-input" />
+                       <q-input outlined dense v-model="emp.pis" :label="genConfig.portaria === '1510' ? 'PIS (11 ou 12 dígitos)' : 'CPF (11 dígitos)'" class="soft-input" />
                     </div>
                     <div class="col-12 col-md-1">
                        <q-btn icon="delete" color="negative" flat round @click="removeEmployee(i)" />
@@ -155,7 +169,7 @@
                  <div class="q-mt-md q-pa-sm rounded-borders bg-surface" style="border: 1px dashed var(--qm-border-light);">
                     <div class="text-caption text-grey-8 q-mb-sm row justify-between items-center">
                        <span>Horários da Jornada (Gerações diárias para cada dia do Período):</span>
-                       <q-btn size="sm" icon="add_time" flat color="primary" label="Novo Horário" @click="addPunchToEmp(emp)" />
+                       <q-btn size="sm" icon="add_time" unelevated color="primary" class="soft-btn soft-btn-primary" label="Nova marcação" @click="addPunchToEmp(emp)" />
                     </div>
                     
                     <div class="row q-gutter-sm">
@@ -235,7 +249,8 @@
         </div>
       </template>
 
-    </q-stepper>
+      </q-stepper>
+    </div>
 
     <!-- Modal de Geração e Download -->
     <q-dialog v-model="genModal.show" persistent>
@@ -287,10 +302,10 @@ export default defineComponent({
     const step = ref(1)
 
     const portariaOptions = [
-       { label: 'Portaria 1510 (Antiga)', value: '1510' },
-       { label: 'Portaria 671 / M (Memória ICP)', value: '671M' },
+       { label: 'Portaria 671 / C (Convencional)', value: '671C' },
        { label: 'Portaria 671 / P (Painel/Software)', value: '671P' },
-       { label: 'Portaria 671 / A (Alternativo)', value: '671A' }
+       { label: 'Portaria 671 / A (Alternativo)', value: '671A' },
+       { label: 'Portaria 1510 (Antiga)', value: '1510' }
     ]
 
     const padDateToToday = () => {
@@ -298,7 +313,7 @@ export default defineComponent({
     }
 
     const genConfig = ref({
-       portaria: '1510',
+       portaria: '671C',
        dateStart: padDateToToday(),
        dateEnd: padDateToToday(),
        includeHeader: true,
@@ -307,8 +322,10 @@ export default defineComponent({
        varianceMinutes: 5,
        header: {
           cnpjCpf: '12345678000199',
-          razaoSocial: 'EMPRESA TESTE DE SOFTWARE DE PONTO LTDA',
-          serialRep: '00000010000123456'
+          razaoSocial: 'TESTE DE SOFTWARE LTDA',
+          serialRep: '00000010000123456',
+          cei: '123456789012',
+          endereco: 'RUA TESTE, 123 - CENTRO'
        },
        employees: [
           { name: 'TESTEMILSON DE OLIVEIRA', pis: '11122233344', punches: ['08:00', '12:00', '13:00', '18:00'] }
@@ -324,7 +341,7 @@ export default defineComponent({
 
     const addEmployee = () => {
        genConfig.value.employees.push({
-          name: 'NOVO FUNCIONÁRIO MOCK',
+          name: 'NOVO FUNCIONÁRIO',
           pis: '99988877766',
           punches: ['08:00', '12:00', '13:00', '18:00']
        })
@@ -394,7 +411,7 @@ export default defineComponent({
           lines.push(appendCrcStr(hLine, cfg.includeCrc))
        }
        
-       const pis1510 = pad('11122233344', 11)
+       const pis1510 = pad('11122233344', 12)
        const cpf671 = pad('11122233344', 12)
        const punchTimes = ['08:00', '12:00', '13:00']
        
@@ -454,22 +471,37 @@ export default defineComponent({
              const startDate = new Date(cfg.dateStart + 'T00:00:00')
              const endDate = new Date(cfg.dateEnd + 'T00:00:00')
              const now = new Date()
+             
+             const is1510 = cfg.portaria === '1510'
+             const is671P = cfg.portaria === '671P'
 
              // 1. HEADER (Tipo 1)
              if (cfg.includeHeader) {
-                 const is1510 = cfg.portaria === '1510'
                  const nsrStr = pad(nsr++, 9)
                  
-                 // Simulação Básica de Header Univarsal
-                 const idEmpregador = is1510 ? pad(cfg.header.cnpjCpf, 14) + pad('', 12, '0') : pad(cfg.header.cnpjCpf, 14)
-                 const razao = pad(cfg.header.razaoSocial, 150, ' ', true)
-                 const serial = pad(cfg.header.serialRep, 17)
+                 const dtStr1510 = formatDt(startDate)
+                 const dtEnd1510 = formatDt(endDate)
+                 const genDt1510 = formatDt(now)
+                 const genTm1510 = `${pad(now.getHours(), 2)}${pad(now.getMinutes(), 2)}`
                  
-                 let headerLine = `${nsrStr}1${idEmpregador}${razao}${serial}${formatDt(startDate)}${formatDt(endDate)}${formatDt(now)}${pad(now.getHours(), 2)}${pad(now.getMinutes(), 2)}`
+                 const genDt671 = `${now.getFullYear()}-${pad(now.getMonth() + 1, 2)}-${pad(now.getDate(), 2)}`
+                 const genDh671 = `${genDt671}T${genTm1510.slice(0, 2)}:${genTm1510.slice(2, 4)}:00-0300`
+
+                 const idEmpregador = is1510 ? pad(cfg.header.cnpjCpf, 14) + pad('', 12, '0') : pad(cfg.header.cnpjCpf, 14, '0')
+                 const razao = pad(cfg.header.razaoSocial, 150, ' ', true)
+                 const serial = pad(cfg.header.serialRep, 17, '0')
+                 
+                 let headerLine = ''
+                 if (is1510) {
+                     headerLine = `${nsrStr}1${idEmpregador}${razao}${serial}${dtStr1510}${dtEnd1510}${genDt1510}${genTm1510}`
+                 } else {
+                     headerLine = `00000000011${idEmpregador}${pad(cfg.header.cei, 14, '0')}${razao}${serial}${genDt671}${genDt671}${genDh671}0031${idEmpregador}${pad(cfg.header.endereco || 'LOCAL DE TRABALHO MOCK', 30, ' ', true)}`
+                 }
+
                  lines.push(appendCrcStr(headerLine, cfg.includeCrc))
              }
 
-             // 2. CORPO (Tipo 3 - Marcações)
+             // 2. CORPO (Tipo 3/7 - Marcações)
              // Itera por dia
              let numMarcacoes = 0
              for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -485,7 +517,6 @@ export default defineComponent({
                        const variance = cfg.varianceMinutes
                        let randomOffset = 0
                        if (variance > 0) {
-                          // Math.random() entre -variance e +variance
                           randomOffset = Math.floor(Math.random() * (variance * 2 + 1)) - variance
                        }
                        
@@ -494,12 +525,25 @@ export default defineComponent({
                        
                        const punchDateStr = formatDt(dateWithTime)
                        const punchTimeStr = `${pad(dateWithTime.getHours(), 2)}${pad(dateWithTime.getMinutes(), 2)}`
+                       const dtStr671 = `${dateWithTime.getFullYear()}-${pad(dateWithTime.getMonth() + 1, 2)}-${pad(dateWithTime.getDate(), 2)}`
                        
                        const nsrStr = pad(nsr++, 9)
-                       const pisCpf = pad(emp.pis, 11)
+                       
+                       const pis1510 = pad(emp.pis, 12)
+                       const cpf671 = pad(emp.pis, 12, '0', false)
 
-                       // Linha Tipo 3 (NSR + 3 + Data + Hora + PIS)
-                       let punchLine = `${nsrStr}3${punchDateStr}${punchTimeStr}${pisCpf}`
+                       let punchLine = ''
+                       if (is1510) {
+                           punchLine = `${nsrStr}3${punchDateStr}${punchTimeStr}${pis1510}`
+                       } else if (is671P) {
+                           const dh = `${dtStr671}T${punchTimeStr.slice(0,2)}:${punchTimeStr.slice(2,4)}:00-0300`
+                           const hash = pad('A', 64, 'A')
+                           punchLine = `${nsrStr}7${dh}${cpf671}${dh}050${hash}`
+                       } else {
+                           const dh = `${dtStr671}T${punchTimeStr.slice(0,2)}:${punchTimeStr.slice(2,4)}:00-0300`
+                           punchLine = `${nsrStr}3${dh}${cpf671}`
+                       }
+
                        lines.push(appendCrcStr(punchLine, cfg.includeCrc))
                        numMarcacoes++
                     }
@@ -509,8 +553,14 @@ export default defineComponent({
              // 3. TRAILER (Tipo 9)
              if (cfg.includeTrailer) {
                  const nsrStr = pad(nsr++, 9)
-                 // No trailer, o totalizador do Tipo 3 é enviado.
-                 let trailerLine = `${nsrStr}9${pad('', 9, '0')}${pad(numMarcacoes, 9)}${pad('', 9, '0')}${pad('', 9, '0')}`
+                 let trailerLine = ''
+                 if (is1510) {
+                     trailerLine = `${nsrStr}9${pad('', 9, '0')}${pad(numMarcacoes, 9)}${pad('', 9, '0')}${pad('', 9, '0')}`
+                 } else {
+                     let t3 = is671P ? pad('', 9, '0') : pad('3', 9)
+                     let t7 = is671P ? pad('3', 9) : pad('', 9, '0')
+                     trailerLine = `999999999${pad('', 9, '0')}${t3}${pad('', 9, '0')}${pad('', 9, '0')}${pad('', 9, '0')}${t7}9`
+                 }
                  lines.push(appendCrcStr(trailerLine, cfg.includeCrc))
              }
 
@@ -574,6 +624,16 @@ export default defineComponent({
 .custom-scrolling-stepper {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  width: 100%;
+}
+
+/* O header do Stepper (as abas) deve poder dar scroll horizontal em telas pequenas para não empurrar a tela toda! */
+.custom-scrolling-stepper :deep(.q-stepper__header) {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  min-width: 0;
+  width: 100%;
 }
 
 /* O corpo do Stepper (onde os panels vivem) deve expandir para preencher a tela */
@@ -582,6 +642,8 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   min-height: 0; /* Bugfix de flexbox para permitir rolagem interna em filhos */
+  min-width: 0;
+  width: 100%;
 }
 
 /* O painel individual deve ter a rolagem quando o conteudo estourar */
@@ -590,6 +652,8 @@ export default defineComponent({
   overflow-y: auto;
   overflow-x: hidden;
   padding-bottom: 24px;
+  min-width: 0;
+  width: 100%;
 }
 
 /* O footer dos botões fica sempre por baixo, grudado, sem rolar junto com o conteudo */

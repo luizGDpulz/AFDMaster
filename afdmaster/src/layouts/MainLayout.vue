@@ -34,10 +34,26 @@
         <nav class="breadcrumbs">
           <span class="breadcrumb-item">AFDMaster</span>
           <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
-          <span class="breadcrumb-current">{{ currentPageTitle }}</span>
-          <template v-if="currentPageTitle === 'Analisar AFD' && store.activeTabName">
-             <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
-             <span class="breadcrumb-current text-primary">{{ store.activeTabName }}</span>
+          
+          <template v-if="route.path.startsWith('/docs') && store.docsBreadcrumbs && store.docsBreadcrumbs.length > 0">
+             <span class="breadcrumb-item cursor-pointer hover-text-primary" @click="goToDocsRoot">Documentação</span>
+             <template v-for="(crumb, i) in store.docsBreadcrumbs" :key="i">
+                <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
+                <span 
+                   class="breadcrumb-current" 
+                   :class="{'text-primary': i === store.docsBreadcrumbs.length - 1, 'cursor-pointer hover-text-primary': crumb.action && i !== store.docsBreadcrumbs.length - 1}"
+                   @click="crumb.action && i !== store.docsBreadcrumbs.length - 1 ? crumb.action() : null"
+                >
+                   {{ crumb.label }}
+                </span>
+             </template>
+          </template>
+          <template v-else>
+             <span class="breadcrumb-current">{{ currentPageTitle }}</span>
+             <template v-if="currentPageTitle === 'Analisar AFD' && store.activeTabName">
+                <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
+                <span class="breadcrumb-current text-primary">{{ store.activeTabName }}</span>
+             </template>
           </template>
         </nav>
       </div>
@@ -126,6 +142,11 @@ export default defineComponent({
     // ===== STATE MOCK =====
     const hasRecords = ref(false) // placeholder to show export button globally if needed
 
+    // ===== ACTION PARA BREADCRUMB ====
+    const goToDocsRoot = () => {
+       store.clearDocsBreadcrumbs()
+    }
+
     return {
       sidebarOpen,
       currentPageTitle,
@@ -133,7 +154,9 @@ export default defineComponent({
       toggleTheme,
       hasRecords,
       store,
-      layoutView
+      layoutView,
+      route,
+      goToDocsRoot
     }
   }
 })
@@ -198,6 +221,11 @@ export default defineComponent({
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--qm-text-primary);
+  transition: color 0.2s ease;
+}
+
+.hover-text-primary:hover {
+  color: var(--qm-primary);
 }
 
 .header-right {

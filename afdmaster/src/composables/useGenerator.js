@@ -53,7 +53,7 @@ export function useGenerator() {
                         }
                     }
 
-                    const pisPadded = padZeros(rec.pis || rec.cpf || '0', 11)
+                    const pisPadded = padZeros(rec.pis || rec.cpf || '0', 12)
                     linhaGerada = `${nsrPadded}${tipoPadded}${dtStr}${hrStr}${pisPadded}`
 
                 } else {
@@ -63,18 +63,18 @@ export function useGenerator() {
                         const nsrPadded = padZeros(nsrToUse, 9)
                         linhaGerada = nsrPadded + rec.raw.substring(9)
                     } else {
-                        linhaGerada = '' // fall safe (para fins de prototipo mantemos)
+                        // fallback se o RAW foi extirpado
+                        linhaGerada = ''
                     }
                 }
             } else {
-                // Formato 671 (muito similar, mas cpf)
-                // No 3 é igual, mas cpf = 11 posicoes
-                if (rec.tipo === '3') {
+                // Formato 671 (muito similar, mas cpf e com ISO dates)
+                // No 3 é igual, mas cpf = 12 posicoes e data é YYYY-MM-DDTHH:mm:00-0300
+                if (rec.tipo === '3' || rec.tipo === '7') {
                     const nsrPadded = padZeros(nsrToUse, 9)
-                    const tipoPadded = '3'
+                    const tipoPadded = rec.tipo
 
-                    let dtStr = '00000000'
-                    let hrStr = '0000'
+                    let dhStr671 = '0000-00-00T00:00:00-0300'
 
                     if (rec.dataHora) {
                         const dt = new Date(rec.dataHora)
@@ -82,19 +82,27 @@ export function useGenerator() {
                             const day = padZeros(dt.getDate(), 2)
                             const mon = padZeros(dt.getMonth() + 1, 2)
                             const yyyy = padZeros(dt.getFullYear(), 4)
-                            dtStr = `${day}${mon}${yyyy}`
-
                             const hh = padZeros(dt.getHours(), 2)
                             const mi = padZeros(dt.getMinutes(), 2)
-                            hrStr = `${hh}${mi}`
+
+                            dhStr671 = `${yyyy}-${mon}-${day}T${hh}:${mi}:00-0300`
                         }
                     }
 
-                    const cpfPadded = padZeros(rec.cpf || rec.pis || '0', 11)
-                    linhaGerada = `${nsrPadded}${tipoPadded}${dtStr}${hrStr}${cpfPadded}`
+                    const cpfPadded = padZeros(rec.cpf || rec.pis || '0', 12)
+
+                    if (rec.tipo === '7') {
+                        // REP-P punch: nsr(9) + 7 + dh(24) + cpf(12) + dh_utc(24) + timezone(3) + hash(64)
+                        // Simplification since usually we just reindex, but if missing we fallback string:
+                        const hash = ''.padStart(64, 'A')
+                        linhaGerada = `${nsrPadded}${tipoPadded}${dhStr671}${cpfPadded}${dhStr671}050${hash}`
+                    } else {
+                        linhaGerada = `${nsrPadded}${tipoPadded}${dhStr671}${cpfPadded}`
+                    }
                 } else {
                     if (rec.raw) {
-                        const nsrPadded = padZeros(nsrToUse, 9) // Pode haver formatos 671 (REP-P/A) com NSR diferente, ajustamos conforme demanda
+                        const nsrPadded = padZeros(nsrToUse, 9)
+                        // Preserve original line but update NSR
                         linhaGerada = nsrPadded + rec.raw.substring(9)
                     }
                 }

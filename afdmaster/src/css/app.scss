@@ -436,6 +436,13 @@ body {
         color: var(--qm-text-muted) !important;
     }
 
+    .q-field__append,
+    .q-field__prepend,
+    .q-field__append .q-icon,
+    .q-select__dropdown-icon {
+        color: var(--qm-text-muted) !important;
+    }
+
     .q-field__native::placeholder {
         color: var(--qm-text-muted) !important;
     }

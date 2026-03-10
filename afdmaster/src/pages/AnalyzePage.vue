@@ -26,8 +26,8 @@
     </div>
 
     <!-- Data State -->
-    <div v-else>
-      <q-card flat bordered class="soft-card">
+    <div v-else class="full-width">
+      <q-card flat bordered class="soft-card analyze-container">
         <q-tabs
           v-model="tab"
           dense
@@ -45,20 +45,20 @@
 
         <q-separator />
 
-        <q-tab-panels v-model="tab" animated keep-alive>
+        <q-tab-panels v-model="tab" animated keep-alive class="col" style="background: transparent;">
           <!-- Aba Registros -->
-          <q-tab-panel name="records" class="q-pa-none">
-            <AfdTable />
+          <q-tab-panel name="records" class="q-pa-none flex column custom-scrolling-panel">
+            <AfdTable class="col" />
           </q-tab-panel>
 
           <!-- Aba Validações -->
-          <q-tab-panel name="validation">
-            <ValidationReport @filter-error="handleFilterError" @filter-warning="handleFilterWarning" />
+          <q-tab-panel name="validation" class="flex column custom-scrolling-panel q-pa-none">
+            <ValidationReport class="col" @filter-error="handleFilterError" @filter-warning="handleFilterWarning" />
           </q-tab-panel>
 
           <!-- Aba Edição Lote -->
-          <q-tab-panel name="editor">
-            <AfdAdvancedEditor />
+          <q-tab-panel name="editor" class="flex column custom-scrolling-panel q-pa-none">
+            <AfdAdvancedEditor class="col" />
           </q-tab-panel>
 
           <!-- Aba Exportar -->
@@ -281,5 +281,18 @@ export default defineComponent({
 <style scoped>
 .border-bottom {
   border-bottom: 1px solid var(--qm-border);
+}
+
+.analyze-container {
+   height: calc(100vh - 119px);
+   display: flex;
+   flex-direction: column;
+   overflow: hidden; /* Garante que os painéis não vazem pelo border-radius ocultando a sombra */
+}
+
+.custom-scrolling-panel {
+   flex-wrap: nowrap;
+   overflow-y: auto;
+   overflow-x: hidden;
 }
 </style>

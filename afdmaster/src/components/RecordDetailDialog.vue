@@ -20,33 +20,33 @@
            <div class="detail-grid">
               <div class="detail-item">
                 <div class="detail-label">Empresa</div>
-                <div class="detail-value text-weight-bold">{{ record.empregadorNome || '—' }}</div>
+                <div class="detail-value text-grey-8 text-weight-bold">{{ record.empregadorNome || '—' }}</div>
               </div>
               <div class="detail-item">
                 <div class="detail-label">{{ record.flagCNPJ === '1' ? 'CNPJ' : 'CPF' }} Empregador</div>
-                <div class="detail-value text-mono">{{ formatCNPJ14(record.empregadorCnpjCpf, record.flagCNPJ) }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ formatCNPJ14(record.empregadorCnpjCpf, record.flagCNPJ) }}</div>
               </div>
               <!-- CEI (1510) -->
               <div class="detail-item" v-if="record.cei && !/^0+$/.test(record.cei)">
                 <div class="detail-label">CEI</div>
-                <div class="detail-value text-mono">{{ record.cei }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ record.cei }}</div>
               </div>
               <!-- CNO/CAEPF (671) -->
               <div class="detail-item" v-if="record.cnoCapef && record.cnoCapef !== '00000000000000'">
                 <div class="detail-label">CNO / CAEPF</div>
-                <div class="detail-value text-mono">{{ record.cnoCapef }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ record.cnoCapef }}</div>
               </div>
               <div class="detail-item" v-if="record.dataInicial">
                 <div class="detail-label">Data Inicial</div>
-                <div class="detail-value">{{ formatDate(record.dataInicial) }}</div>
+                <div class="detail-value text-grey-8">{{ formatDate(record.dataInicial) }}</div>
               </div>
               <div class="detail-item" v-if="record.dataFinal">
                 <div class="detail-label">Data Final</div>
-                <div class="detail-value">{{ formatDate(record.dataFinal) }}</div>
+                <div class="detail-value text-grey-8">{{ formatDate(record.dataFinal) }}</div>
               </div>
               <div class="detail-item" v-if="record.dataHora">
                 <div class="detail-label">Geração do Arquivo</div>
-                <div class="detail-value">{{ formatDateTime(record.dataHora) }}</div>
+                <div class="detail-value text-grey-8">{{ formatDateTime(record.dataHora) }}</div>
               </div>
               <div class="detail-item" v-if="record.fusoHorario">
                 <div class="detail-label">Fuso Horário</div>
@@ -54,19 +54,19 @@
               </div>
               <div class="detail-item" v-if="record.nroFabricacao">
                 <div class="detail-label">Nº Fabricação REP</div>
-                <div class="detail-value text-mono">{{ record.nroFabricacao }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ record.nroFabricacao }}</div>
               </div>
               <div class="detail-item" v-if="record.modelo">
                 <div class="detail-label">Modelo</div>
-                <div class="detail-value">{{ record.modelo }}</div>
+                <div class="detail-value text-grey-8">{{ record.modelo }}</div>
               </div>
               <div class="detail-item" v-if="record.cnpjFabricante">
                 <div class="detail-label">{{ record.flagFabricante === '1' ? 'CNPJ' : 'CPF' }} Fabricante</div>
-                <div class="detail-value text-mono">{{ formatCNPJ14(record.cnpjFabricante, record.flagFabricante) }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ formatCNPJ14(record.cnpjFabricante, record.flagFabricante) }}</div>
               </div>
               <div class="detail-item" v-if="record.crc">
                 <div class="detail-label">CRC-16</div>
-                <div class="detail-value text-mono text-grey-7">{{ record.crc }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ record.crc }}</div>
               </div>
               <div class="detail-item" v-if="record.erros && record.erros.length > 0">
                 <div class="detail-label text-negative">Erros de Validação</div>
@@ -85,8 +85,8 @@
         
         <!-- Raw line -->
         <q-card-section class="q-pt-none">
-          <div class="detail-label q-mb-xs">Linha raw (Original)</div>
-          <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">
+          <div class="detail-label q-mb-xs q-mt-md">Linha raw original</div>
+          <div class="raw-line text-mono">
             {{ record.raw }}
           </div>
         </q-card-section>
@@ -102,25 +102,25 @@
               </div>
               <div class="detail-item">
                 <div class="detail-label">{{ record.flagCNPJ === '1' ? 'CNPJ' : 'CPF' }} Empregador</div>
-                <div class="detail-value text-mono">{{ formatCNPJ14(record.empregadorCnpjCpf, record.flagCNPJ) }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ formatCNPJ14(record.empregadorCnpjCpf, record.flagCNPJ) }}</div>
               </div>
               <!-- CEI (1510) -->
               <div class="detail-item" v-if="record.cei && !/^0+$/.test(record.cei)">
                 <div class="detail-label">CEI</div>
-                <div class="detail-value text-mono">{{ record.cei }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ record.cei }}</div>
               </div>
               <!-- CNO/CAEPF (671) -->
               <div class="detail-item" v-if="record.cnoCapef && record.cnoCapef !== '00000000000000'">
                 <div class="detail-label">CNO / CAEPF</div>
-                <div class="detail-value text-mono">{{ record.cnoCapef }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ record.cnoCapef }}</div>
               </div>
               <div class="detail-item" v-if="record.local">
                 <div class="detail-label">Local de Prestação</div>
-                <div class="detail-value">{{ record.local }}</div>
+                <div class="detail-value text-grey-8">{{ record.local }}</div>
               </div>
               <div class="detail-item" v-if="record.dataHora">
                 <div class="detail-label">Data / Hora</div>
-                <div class="detail-value">{{ formatDateTime(record.dataHora) }}</div>
+                <div class="detail-value text-grey-8">{{ formatDateTime(record.dataHora) }}</div>
               </div>
               <div class="detail-item" v-if="record.fusoHorario">
                 <div class="detail-label">Fuso Horário</div>
@@ -128,7 +128,7 @@
               </div>
               <div class="detail-item" v-if="record.cpf">
                 <div class="detail-label">CPF Responsável</div>
-                <div class="detail-value text-mono">{{ formatCPF(record.cpf) }}</div>
+                <div class="detail-value text-grey-8 text-mono">{{ formatCPF(record.cpf) }}</div>
               </div>
               <div class="detail-item" v-if="record.crc">
                 <div class="detail-label">CRC-16</div>
@@ -152,8 +152,8 @@
         
         <!-- Raw line -->
         <q-card-section class="q-pt-none">
-          <div class="detail-label q-mb-xs">Linha raw (Original)</div>
-          <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">
+          <div class="detail-label q-mb-xs q-mt-md">Linha raw original</div>
+          <div class="raw-line text-mono">
             {{ record.raw }}
           </div>
         </q-card-section>
@@ -163,6 +163,10 @@
       <template v-else-if="record.tipo === '3'">
         <q-card-section class="q-pt-md">
           <div class="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">NSR</div>
+              <div class="detail-value text-grey-8 text-mono text-weight-bold">{{ record.nsr }}</div>
+            </div>
             <div class="detail-item" v-if="record.ordemPar">
               <div class="detail-label">Marcação</div>
               <div>
@@ -176,15 +180,15 @@
             </div>
             <div class="detail-item">
               <div class="detail-label">{{ identificadorLabel }}</div>
-              <div class="detail-value text-mono">{{ formatPIS(record.cpf || record.pis) || '—' }}</div>
+              <div class="detail-value text-grey-8 text-mono">{{ formatPIS(record.cpf || record.pis) || '—' }}</div>
             </div>
             <div class="detail-item" v-if="record.dataHora">
               <div class="detail-label">Data</div>
-              <div class="detail-value">{{ formatDate(record.dataHora ? record.dataHora.substring(0,10) : null) }}</div>
+              <div class="detail-value text-grey-8">{{ formatDate(record.dataHora ? record.dataHora.substring(0,10) : null) }}</div>
             </div>
             <div class="detail-item" v-if="record.dataHora">
               <div class="detail-label">Hora</div>
-              <div class="detail-value text-mono text-weight-bold">{{ record.dataHora ? record.dataHora.substring(11,16) : '—' }}</div>
+              <div class="detail-value text-grey-8 text-mono text-weight-bold">{{ record.dataHora ? record.dataHora.substring(11,16) : '—' }}</div>
             </div>
             <div class="detail-item" v-if="record.fusoHorario">
               <div class="detail-label">Fuso Horário</div>
@@ -210,8 +214,10 @@
           </div>
         </q-card-section>
         <q-card-section class="q-pt-none">
-          <div class="detail-label q-mb-xs">Linha raw</div>
-          <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">{{ record.raw }}</div>
+          <div class="detail-label q-mb-xs q-mt-md">Linha raw original</div>
+          <div class="raw-line text-mono">
+            {{ record.raw }}
+          </div>
         </q-card-section>
       </template>
 
@@ -221,11 +227,11 @@
           <div class="detail-grid">
             <div class="detail-item" v-if="record.dataHora">
               <div class="detail-label">Data/Hora Antes do Ajuste</div>
-              <div class="detail-value">{{ formatDateTime(record.dataHora) }}</div>
+              <div class="detail-value text-grey-8">{{ formatDateTime(record.dataHora) }}</div>
             </div>
             <div class="detail-item" v-if="record.dataHoraAjuste">
               <div class="detail-label">Data/Hora Ajustada</div>
-              <div class="detail-value text-weight-bold">{{ formatDateTime(record.dataHoraAjuste) }}</div>
+              <div class="detail-value text-grey-8 text-weight-bold">{{ formatDateTime(record.dataHoraAjuste) }}</div>
             </div>
             <div class="detail-item" v-if="record.fusoHorario">
               <div class="detail-label">Fuso Horário</div>
@@ -233,7 +239,7 @@
             </div>
             <div class="detail-item" v-if="record.cpf">
               <div class="detail-label">CPF Responsável</div>
-              <div class="detail-value text-mono">{{ formatCPF(record.cpf) }}</div>
+              <div class="detail-value text-grey-8 text-mono">{{ formatCPF(record.cpf) }}</div>
             </div>
             <div class="detail-item" v-if="record.crc">
               <div class="detail-label">CRC-16</div>
@@ -255,8 +261,10 @@
           </div>
         </q-card-section>
         <q-card-section class="q-pt-none">
-          <div class="detail-label q-mb-xs">Linha raw</div>
-          <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">{{ record.raw }}</div>
+          <div class="detail-label q-mb-xs q-mt-md">Linha raw original</div>
+          <div class="raw-line text-mono">
+            {{ record.raw }}
+          </div>
         </q-card-section>
       </template>
 
@@ -293,8 +301,8 @@
 
         <!-- Raw line -->
         <q-card-section class="q-pt-none">
-          <div class="detail-label q-mb-xs">Linha raw (Original)</div>
-          <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">
+          <div class="detail-label q-mb-xs q-mt-md">Linha raw original</div>
+          <div class="raw-line text-mono">
             {{ record.raw }}
           </div>
         </q-card-section>
@@ -317,24 +325,27 @@
             <span class="text-caption text-grey-6">NSR #{{ record.nsr }}</span>
           </div>
 
-          <!-- Grid de campos -->
           <div class="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">NSR</div>
+              <div class="detail-value text-grey-8 text-mono text-weight-bold">{{ record.nsr }}</div>
+            </div>
 
             <div class="detail-item">
               <div class="detail-label">Nome do Empregado</div>
-              <div class="detail-value text-weight-bold text-body1">
+              <div class="detail-value text-grey-8 text-weight-bold text-body1">
                 {{ record.nomeEmpregado || '—' }}
               </div>
             </div>
 
             <div class="detail-item">
               <div class="detail-label">{{ identificadorLabel }} do Empregado</div>
-              <div class="detail-value text-mono">{{ formatCPF(record.cpf) || '—' }}</div>
+              <div class="detail-value text-grey-8 text-mono">{{ formatCPF(record.cpf) || '—' }}</div>
             </div>
 
             <div class="detail-item">
               <div class="detail-label">Data / Hora da Gravação</div>
-              <div class="detail-value">
+              <div class="detail-value text-grey-8">
                 {{ formatDateTime(record.dataHora) }}
               </div>
             </div>
@@ -346,7 +357,7 @@
 
             <div class="detail-item">
               <div class="detail-label">CPF Responsável</div>
-              <div class="detail-value text-mono">{{ formatCPF(record.cpfResponsavel) || '—' }}</div>
+              <div class="detail-value text-grey-8 text-mono">{{ formatCPF(record.cpfResponsavel) || '—' }}</div>
             </div>
 
             <div class="detail-item" v-if="record.demaisDados">
@@ -381,6 +392,69 @@
         <q-card-section class="q-pt-none">
           <div class="detail-label q-mb-xs">Linha raw</div>
           <div class="raw-line text-mono text-caption bg-grey-2 q-pa-sm rounded-borders">
+            {{ record.raw }}
+          </div>
+        </q-card-section>
+      </template>
+
+      <!-- Tipo 6: Eventos Sensíveis -->
+      <template v-else-if="record.tipo === '6'">
+        <q-card-section class="q-pt-md">
+          <div class="row items-center q-mb-lg q-gutter-sm">
+            <q-chip
+              color="negative"
+              text-color="white"
+              icon="gavel"
+              size="md"
+              class="text-weight-bold"
+            >
+              Evento de Segurança
+            </q-chip>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">NSR</div>
+              <div class="detail-value text-grey-8 text-mono text-weight-bold">{{ record.nsr }}</div>
+            </div>
+            <div class="detail-item" v-if="record.dataHora">
+              <div class="detail-label">Data / Hora do Evento</div>
+              <div class="detail-value text-grey-8">
+                {{ formatDateTime(record.dataHora) }}
+              </div>
+            </div>
+            <div class="detail-item" v-if="record.fusoHorario">
+              <div class="detail-label">Fuso Horário</div>
+              <span class="fuso-chip">GMT{{ record.fusoHorario }}</span>
+            </div>
+            <div class="detail-item" v-if="record.tipoEvento">
+              <div class="detail-label">Descrição do Evento Sensível</div>
+              <div class="detail-value text-negative text-weight-bold">
+                {{ formatEventoSensivel(record.tipoEvento) }}
+              </div>
+            </div>
+            <div class="detail-item" v-if="record.crc">
+              <div class="detail-label">CRC-16</div>
+              <div class="detail-value text-mono text-grey-7">{{ record.crc }}</div>
+            </div>
+            <div class="detail-item" v-if="record.erros && record.erros.length > 0">
+              <div class="detail-label text-negative">Erros de Validação</div>
+              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
+                • {{ e }}
+              </div>
+            </div>
+            <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
+              <div class="detail-label text-warning-dark">Avisos</div>
+              <div v-for="(w, i) in record.avisos" :key="i" class="detail-value text-warning-dark text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ w.msg || w }}</span>
+                <q-btn v-if="w.conflitoNsr" size="sm" color="warning" text-color="black" outline label="Ver conflitante" dense flat @click="viewConflict(w.conflitoNsr)" />
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <div class="detail-label q-mb-xs q-mt-md">Linha raw original</div>
+          <div class="raw-line text-mono">
             {{ record.raw }}
           </div>
         </q-card-section>
@@ -567,7 +641,17 @@ export default defineComponent({
       return `${dd}/${m}/${y}`
     }
 
-    return { identificadorLabel, operacaoLabel, operacaoColor, formatCPF, formatPIS, formatDateTime, formatCNPJ14, formatDate, viewConflict, viewDayPunches }
+    const formatEventoSensivel = (codigo) => {
+      const map = {
+        '01': '01 - Alteração de data e hora',
+        '02': '02 - Violação do compartimento da MRP',
+        '03': '03 - Tent. de alteração das configurações da rede',
+        '04': '04 - Tentativa de violar arquivos da MRP'
+      }
+      return map[codigo] || `${codigo} - Evento Desconhecido`
+    }
+
+    return { identificadorLabel, operacaoLabel, operacaoColor, formatCPF, formatPIS, formatDateTime, formatCNPJ14, formatDate, viewConflict, viewDayPunches, formatEventoSensivel }
   }
 })
 </script>
@@ -594,7 +678,7 @@ export default defineComponent({
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--qm-text-muted, #78909c);
+  color: var(--qm-text);
   margin-bottom: 2px;
   padding-left: 4px;
 }
@@ -602,7 +686,7 @@ export default defineComponent({
 .detail-value {
   font-size: 0.9rem;
   color: var(--qm-text, #263238);
-  background-color: var(--qm-surface, #f5f7fa);
+  background-color: rgba(0, 0, 0, 0.03);
   padding: 6px 14px;
   border-radius: 24px;
   display: inline-block;
@@ -612,10 +696,14 @@ export default defineComponent({
   border: 1px solid var(--qm-border-light, #eceff1);
 }
 
+[data-theme="dark"] .detail-value {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
 .detail-value.text-negative {
-  background-color: #ffebee;
-  color: #c62828 !important;
-  border-color: #ffcdd2;
+  background-color: rgba(198, 40, 40, 0.08) !important;
+  color: var(--qm-negative) !important;
+  border-color: rgba(198, 40, 40, 0.2) !important;
   border-radius: 12px;
   margin-bottom: 4px;
 }
@@ -623,16 +711,22 @@ export default defineComponent({
 /* ── Fuso chip ── */
 .fuso-chip {
   display: inline-block;
-  background: var(--qm-surface, #e3f2fd);
-  color: var(--qm-primary, #1565c0);
+  background: rgba(21, 101, 192, 0.08) !important;
+  color: #1976d2 !important;
   border-radius: 24px;
   font-size: 0.85rem;
   font-weight: 700;
   font-family: 'Roboto Mono', monospace;
   padding: 6px 14px;
   letter-spacing: 0.03em;
-  border: 1px solid var(--qm-border-light, #bbdefb);
+  border: 1px solid rgba(21, 101, 192, 0.15);
   width: fit-content;
+}
+
+[data-theme="dark"] .fuso-chip {
+  background: rgba(100, 181, 246, 0.15) !important;
+  color: #90caf9 !important;
+  border: 1px solid rgba(100, 181, 246, 0.2);
 }
 
 .text-mono {
@@ -642,9 +736,16 @@ export default defineComponent({
 .raw-line {
   word-break: break-all;
   border-radius: 12px;
-  border: 1px solid var(--qm-border-light, #cfd8dc);
-  color: var(--qm-text-muted, #546e7a);
-  background-color: var(--qm-surface, #eceff1) !important;
+  border: 1px dashed var(--qm-border-light, #cfd8dc);
+  color: var(--qm-text-secondary, #90a4ae);
+  opacity: 0.85;
+  background-color: rgba(0, 0, 0, 0.03) !important;
   line-height: 1.6;
+  font-size: 0.8rem;
+  padding: 10px 14px;
+}
+
+[data-theme="dark"] .raw-line {
+  background-color: rgba(255, 255, 255, 0.03) !important;
 }
 </style>

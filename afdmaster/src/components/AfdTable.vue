@@ -1,12 +1,12 @@
 ﻿<template>
-  <div class="q-pa-md" ref="rootRef">
+  <div class="q-pa-md flex column no-wrap" ref="rootRef" style="height: 100%;">
     <div v-if="!store.hasRecords" class="text-center q-pa-xl text-grey-6">
       <q-icon name="warning" size="48px" />
       <div class="text-h6 q-mt-md">Nenhum dado importado.</div>
       <q-btn flat color="primary" to="/" label="Ir para Upload" class="q-mt-sm" />
     </div>
 
-    <div v-else>
+    <div v-else class="flex column no-wrap" style="height: 100%;">
 
       <div class="row items-center q-mb-xs q-col-gutter-sm">
         <div class="col-12 col-md-3">
@@ -14,10 +14,25 @@
               dense outlined
               v-model="tipoFiltro"
               :options="tipoOptions"
-              label="Filtrar por Tipo"
-              class="soft-input"
+              :label="tipoFiltro ? undefined : 'Filtrar por Tipo'"
+              class="soft-input filter-type-select"
               emit-value map-options
-           />
+           >
+              <template v-slot:selected-item="scope">
+                <div class="row items-center full-width" style="min-height: 24px;">
+                  <RecordTypeBadge v-if="scope.opt.value" :tipo="scope.opt.value" :label="scope.opt.label" />
+                  <span v-else class="text-grey-8">{{ scope.opt.label }}</span>
+                </div>
+              </template>
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section>
+                    <RecordTypeBadge v-if="scope.opt.value" :tipo="scope.opt.value" :label="scope.opt.label" style="width: max-content;"/>
+                    <span v-else class="text-weight-medium">{{ scope.opt.label }}</span>
+                  </q-item-section>
+                </q-item>
+              </template>
+           </q-select>
         </div>
         <div class="col-12 col-md-2">
            <q-input dense outlined v-model="dataInicio" type="date" label="Data Início" class="soft-input" />
@@ -157,7 +172,7 @@
 
 </template>
 <script>
-import { defineComponent, ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { defineComponent, ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useValidators } from 'src/composables/useValidators'
 import { useQuasar, debounce } from 'quasar'
@@ -181,7 +196,6 @@ export default defineComponent({
 
     const pagination = ref({ rowsPerPage: 0 })
 
-    // ── Altura dinâmica da tabela ──────────────────────────────────────────
     const qTableRef = ref(null)
     const rootRef   = ref(null)
     const tableHeight = ref(600)
@@ -201,8 +215,7 @@ export default defineComponent({
       
       const newHeight = Math.max(200, Math.floor(available - 16 - filtersH))
       
-      // Threshold check to prevent ResizeObserver infinite loops on virtual scroll jumps
-      if (Math.abs(tableHeight.value - newHeight) > 10) {
+      if (Math.abs(tableHeight.value - newHeight) > 5) {
           tableHeight.value = newHeight
       }
     }
@@ -216,7 +229,6 @@ export default defineComponent({
       if (rootRef.value) resizeObserver.observe(rootRef.value)
       window.addEventListener('resize', computeHeight)
       
-      // Fallbacks para garantir que a medida ocorra após montagem
       setTimeout(computeHeight, 50)
       setTimeout(computeHeight, 300)
     })
@@ -354,6 +366,7 @@ export default defineComponent({
         base.push({ label: '6 - Eventos', value: '6' })
         base.push({ label: '7 - Marcação REP-P', value: '7' })
       }
+      base.push({ label: '9 - Trailer', value: '9' })
       return base
     })
 
@@ -429,9 +442,12 @@ export default defineComponent({
         return `${digits.substring(0,3)}.${digits.substring(3,8)}.${digits.substring(8,10)}-${digits.substring(10,11)}`
       }
       if (digits.length === 12) {
-        const trimmed = digits.replace(/^0/, '')
+        const trimmed = digits.replace(/^0/, '') // Tenta ver se é só padding de zero
         if (trimmed.length === 11) {
           return `${trimmed.substring(0,3)}.${trimmed.substring(3,8)}.${trimmed.substring(8,10)}-${trimmed.substring(10,11)}`
+        } else {
+          // Se realmente tem 12 dígitos fortes (alguns fabricantes fazem isso)
+          return `${digits.substring(0,1)}.${digits.substring(1,4)}.${digits.substring(4,9)}.${digits.substring(9,11)}-${digits.substring(11,12)}`
         }
       }
       return pis // fallback

@@ -42,7 +42,11 @@ export const useAfdStore = defineStore('afd', {
             type: null,
             dateStart: '',
             dateEnd: ''
-        }
+        },
+
+        // Documentação: navegação de pastas / breadcrumbs
+        // Cada item deve ser do formato: { label: 'Nome', routeData: { /* dados p/ restaurar view */ } }
+        docsBreadcrumbs: []
     }),
 
     // getters (computed states) originais foram movidos para a função estática abaixo
@@ -126,6 +130,14 @@ export const useAfdStore = defineStore('afd', {
 
         setFilters(newFilters) {
             this.filters = { ...this.filters, ...newFilters }
+        },
+
+        setDocsBreadcrumbs(breadcrumbs) {
+            this.docsBreadcrumbs = breadcrumbs
+        },
+
+        clearDocsBreadcrumbs() {
+            this.docsBreadcrumbs = []
         }
     }
 })
