@@ -263,7 +263,7 @@
         
         <q-card-section v-else>
            <q-icon name="check_circle" color="positive" size="80px" class="q-mb-md fade-in" />
-           <div class="text-h5 text-weight-bold text-dark q-mb-sm">Sucesso!</div>
+           <div class="text-h5 text-weight-bold q-mb-sm">Sucesso!</div>
            <div class="text-subtitle1 text-grey-8 q-mb-lg">
              {{ genModal.recordCount }} registros foram compialdos na portaria {{ genConfig.portaria }}.
            </div>

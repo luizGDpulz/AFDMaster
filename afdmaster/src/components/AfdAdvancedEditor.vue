@@ -45,11 +45,13 @@
                 v-model="replaceMode"
                 spread
                 unelevated
-                toggle-color="primary"
-                color="grey-2"
-                text-color="grey-8"
+                :toggle-color="store.isDark ? 'white' : 'primary'"
+                :toggle-text-color="store.isDark ? 'black' : 'white'"
+                :color="store.isDark ? 'grey-10' : 'grey-2'"
+                :text-color="store.isDark ? 'grey-6' : 'grey-8'"
                 :options="replaceModeOptions"
                 class="mode-toggle"
+                :dark="store.isDark"
               />
               <div class="text-caption text-grey-6 q-mt-xs">
                 <span v-if="replaceMode === 'batch'">
@@ -86,10 +88,12 @@
                 <q-input
                   outlined dense
                   v-model="replaceForm.nsrList"
-                  label="NSRs dos registros a alterar"
+                  :label="(nsrFocused || replaceForm.nsrList) ? undefined : 'NSRs dos registros a alterar'"
                   class="soft-input"
                   hint="Separe por vírgula: ex. 100, 101, 102"
-                  placeholder="Ex: 100, 101, 102"
+                  :placeholder="(nsrFocused || replaceForm.nsrList) ? 'Ex: 100, 101, 102' : ''"
+                  @focus="nsrFocused = true"
+                  @blur="nsrFocused = false"
                 />
               </div>
             </div>
@@ -215,7 +219,7 @@
 
                   <!-- 1510 → 671 -->
                   <div class="col-12 col-sm-6" v-if="store.portaria === '1510'">
-                    <q-card flat bordered class="convert-option-card">
+                    <q-card flat bordered class="convert-option-card" :dark="store.isDark">
                       <q-card-section class="q-pa-md">
                         <div class="text-subtitle2 text-weight-bold text-primary q-mb-xs">
                           <q-icon name="arrow_forward" class="q-mr-xs" />
@@ -249,7 +253,7 @@
 
                   <!-- 671 → 1510 -->
                   <div class="col-12 col-sm-6" v-if="store.portaria === '671'">
-                    <q-card flat bordered class="convert-option-card">
+                    <q-card flat bordered class="convert-option-card" :dark="store.isDark">
                       <q-card-section class="q-pa-md">
                         <div class="text-subtitle2 text-weight-bold text-orange q-mb-xs">
                           <q-icon name="arrow_back" class="q-mr-xs" />
@@ -346,6 +350,8 @@ export default defineComponent({
     // ── Referências dos modais ─────────────────────────────────────
     const confirmReplaceRef = ref(null)
     const confirmConvertRef = ref(null)
+
+    const nsrFocused = ref(false)
 
     // ── Estado da conversão de portaria ───────────────────────────
     let pendingConversionType = '' // '1510_to_671' | '671_to_1510'
@@ -785,7 +791,8 @@ export default defineComponent({
       // Modais
       confirm,
       confirmReplaceRef,
-      confirmConvertRef
+      confirmConvertRef,
+      nsrFocused
     }
   }
 })
@@ -810,6 +817,10 @@ export default defineComponent({
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--qm-border, #e0e0e0);
+}
+
+[data-theme="dark"] .mode-toggle {
+  background: var(--qm-bg-secondary);
 }
 
 .mode-toggle :deep(.q-btn) {
@@ -838,5 +849,9 @@ export default defineComponent({
 .convert-option-card {
   border-radius: 10px !important;
   height: 100%;
+}
+
+[data-theme="dark"] .convert-option-card {
+  background: var(--qm-surface-variant);
 }
 </style>

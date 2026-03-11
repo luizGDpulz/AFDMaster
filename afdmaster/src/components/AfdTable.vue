@@ -310,7 +310,6 @@ export default defineComponent({
       }
     }
 
-    // eslint-disable-next-line no-unused-vars
     const openNsrNeighborhood = () => {
        conflictModalOpen.value = false
        dayModalOpen.value = false

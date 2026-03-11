@@ -1,6 +1,6 @@
 <template>
-  <q-dialog v-model="open" persistent transition-show="scale" transition-hide="scale">
-    <q-card class="soft-card confirm-dialog">
+  <q-dialog v-model="open" :dark="dark" persistent transition-show="scale" transition-hide="scale">
+    <q-card class="soft-card confirm-dialog" :dark="dark">
       <!-- Ícone + Título -->
       <q-card-section class="row items-center no-wrap q-pb-none">
         <q-icon
@@ -96,6 +96,10 @@ export default defineComponent({
     loadingMessage: {
       type: String,
       default: 'Processando...'
+    },
+    dark: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['update:modelValue', 'confirmed', 'cancelled'],

@@ -3,7 +3,7 @@
     
     <div class="about-container text-center">
         <q-avatar size="140px" square class="q-mb-md">
-           <img :src="store.isDark ? '/app-logo-dark.svg' : '/app-logo.png'" alt="Logo AFDMaster" />
+           <img :src="store.isDark ? './app-logo-dark.svg' : './app-logo.png'" alt="Logo AFDMaster" />
         </q-avatar>
 
        <div class="text-h4 text-weight-bold text-primary q-mb-sm">AFDMaster</div>

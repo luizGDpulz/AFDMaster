@@ -4,7 +4,7 @@
     <!-- Logo -->
     <div class="sidebar-header">
       <div class="logo">
-        <img :src="isDark ? '/app-logo-dark.svg' : '/app-logo.svg'" style="width: 120px; height: 120px;" alt="Logo AFDMaster" />
+        <img :src="isDark ? './app-logo-dark.svg' : './app-logo.svg'" style="width: 120px; height: 120px;" alt="Logo AFDMaster" />
         <span class="logo-text">AFDMaster</span>
       </div>
     </div>

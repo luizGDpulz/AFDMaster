@@ -92,7 +92,7 @@
                     <q-item-label caption class="text-grey-6">Apaga todo o arquivo lido no momento da aplicação sem salvar.</q-item-label>
                  </q-item-section>
                  <q-item-section side>
-                    <q-btn flat class="text-negative soft-btn soft-btn-primary" label="Limpar Dados" @click="confirmClear" style="color: var(--qm-error) !important;" />
+                     <q-btn unelevated color="negative" class="soft-btn" label="Limpar Dados" @click="confirmClear" />
                  </q-item-section>
               </q-item>
 
@@ -100,35 +100,59 @@
           </q-card-section>
         </q-card>
     </div>
+    <ConfirmEditDialog
+      v-model="clearModal.open"
+      title="Zerar Memória"
+      message="Tem certeza que deseja apagar todos os registros da memória? Esta ação não pode ser desfeita."
+      warning="Todos os dados importados serão perdidos."
+      action-label="Limpar Tudo"
+      action-color="negative"
+      action-icon="delete_sweep"
+      icon="warning"
+      icon-color="negative"
+      :dark="store.isDark"
+      ref="confirmClearRef"
+      @confirmed="executeClear"
+    />
   </q-page>
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useQuasar } from 'quasar'
+import ConfirmEditDialog from 'src/components/ConfirmEditDialog.vue'
 
 export default defineComponent({
   name: 'SettingsPage',
+  components: { ConfirmEditDialog },
   setup() {
     const store = useAfdStore()
     const $q = useQuasar()
+    const confirmClearRef = ref(null)
+
+    const clearModal = ref({
+      open: false
+    })
 
     const confirmClear = () => {
-      $q.dialog({
-        title: 'Confirmação',
-        message: 'Tem certeza que deseja apagar todos os registros da memória?',
-        cancel: true,
-        persistent: true
-      }).onOk(() => {
+      clearModal.value.open = true
+    }
+
+    const executeClear = () => {
+      setTimeout(() => {
         store.clearData()
+        confirmClearRef.value?.done()
         $q.notify({ type: 'positive', message: 'Dados da sessão foram apagados.' })
-      })
+      }, 500)
     }
 
     return {
       store,
-      confirmClear
+      clearModal,
+      confirmClear,
+      executeClear,
+      confirmClearRef
     }
   }
 })
