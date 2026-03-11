@@ -1,12 +1,12 @@
 ﻿<template>
-  <div class="q-pa-md" ref="rootRef">
+  <div class="q-pa-md flex column no-wrap" ref="rootRef" style="height: 100%;">
     <div v-if="!store.hasRecords" class="text-center q-pa-xl text-grey-6">
       <q-icon name="warning" size="48px" />
       <div class="text-h6 q-mt-md">Nenhum dado importado.</div>
       <q-btn flat color="primary" to="/" label="Ir para Upload" class="q-mt-sm" />
     </div>
 
-    <div v-else>
+    <div v-else class="flex column no-wrap" style="height: 100%;">
 
       <div class="row items-center q-mb-xs q-col-gutter-sm">
         <div class="col-12 col-md-3">
@@ -14,26 +14,41 @@
               dense outlined
               v-model="tipoFiltro"
               :options="tipoOptions"
-              label="Filtrar por Tipo"
-              class="soft-input bg-white"
+              :label="tipoFiltro ? undefined : 'Filtrar por Tipo'"
+              class="soft-input filter-type-select"
               emit-value map-options
-           />
+           >
+              <template v-slot:selected-item="scope">
+                <div class="row items-center full-width" style="min-height: 24px;">
+                  <RecordTypeBadge v-if="scope.opt.value" :tipo="scope.opt.value" :label="scope.opt.label" />
+                  <span v-else class="text-grey-8">{{ scope.opt.label }}</span>
+                </div>
+              </template>
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section>
+                    <RecordTypeBadge v-if="scope.opt.value" :tipo="scope.opt.value" :label="scope.opt.label" style="width: max-content;"/>
+                    <span v-else class="text-weight-medium">{{ scope.opt.label }}</span>
+                  </q-item-section>
+                </q-item>
+              </template>
+           </q-select>
         </div>
         <div class="col-12 col-md-2">
-           <q-input dense outlined v-model="dataInicio" type="date" label="Data Início" class="soft-input bg-white" />
+           <q-input dense outlined v-model="dataInicio" type="date" label="Data Início" class="soft-input" />
         </div>
         <div class="col-12 col-md-2">
-           <q-input dense outlined v-model="dataFim" type="date" label="Data Fim" class="soft-input bg-white" />
+           <q-input dense outlined v-model="dataFim" type="date" label="Data Fim" class="soft-input" />
         </div>
         <div class="col-12 col-md-5 row justify-end items-center">
-            <q-input dense outlined v-model="filter" placeholder="Buscar: NSR, CPF, nome..." class="q-mr-sm soft-input bg-white" style="flex-grow: 1;">
+            <q-input dense outlined v-model="localSearchQuery" @update:model-value="onSearchInput" placeholder="Buscar: NSR, CPF, nome..." class="q-mr-sm soft-input" style="flex-grow: 1;">
               <template v-slot:append>
-                <q-icon name="search" />
+                <q-icon name="search" class="q-icon-ondark"/>
               </template>
             </q-input>
             <q-btn-dropdown
                 unelevated
-                class="soft-btn"
+                class="soft-btn q-icon-onwhite"
                 :color="statusFilterColor"
                 :icon="statusFilterIcon"
                 no-icon-animation
@@ -58,11 +73,13 @@
 
       <q-table
         flat bordered
+        :dark="store.isDark"
         :rows="store.records"
         :columns="columns"
         row-key="id"
         :filter="filterTrigger"
         :filter-method="customFilterMethod"
+        :loading="isFiltering"
         virtual-scroll
         :virtual-scroll-item-size="48"
         :virtual-scroll-sticky-size-start="48"
@@ -132,20 +149,54 @@
       </q-table>
 
       <!-- Modal Único de Detalhes -> Contém a tela principal e os filhos lado a lado -->
-      <q-dialog v-model="isDetailOpen" transition-show="fade" transition-hide="fade" class="wide-dialog">
+       <q-dialog v-model="isDetailOpen" transition-show="fade" transition-hide="fade" class="wide-dialog">
          <div class="row no-wrap items-start justify-center shadow-0" style="gap: 24px; padding: 12px; background: transparent;">
             <div class="modal-slide-card">
-               <RecordDetailDialog :record="selectedRecord" @hide="isDetailOpen = false" @viewConflict="openConflict" @viewDayPunches="openDayPunches" />
+               <RecordDetailDialog :record="selectedRecord" @hide="isDetailOpen = false" @viewConflict="openConflict" @viewDayPunches="openDayPunches" @viewNsrNeighborhood="openNsrNeighborhood" />
             </div>
 
             <!-- Modal Secundário para Marcação Conflitante -->
-            <div class="modal-slide-card" v-if="conflictModalOpen">
-               <RecordDetailDialog :record="conflictingRecord" is-child @hide="conflictModalOpen = false" @viewDayPunches="openDayPunches" />
+            <div class="modal-slide-card" v-if="conflictModalOpen && !nsrModalOpen">
+               <RecordDetailDialog :record="conflictingRecord" is-child @hide="conflictModalOpen = false" @viewDayPunches="openDayPunches" @viewNsrNeighborhood="openNsrNeighborhood" />
             </div>
             
             <!-- Modal Secundário para Marcações do Dia -->
-            <div class="modal-slide-card" v-if="dayModalOpen">
+            <div class="modal-slide-card" v-if="dayModalOpen && !nsrModalOpen">
                <DayPunchesDialog :punches="dayPunches" @hide="dayModalOpen = false" />
+            </div>
+
+            <!-- Modal Secundário para Vizinhança NSR -->
+            <div class="modal-slide-card flex column no-wrap" v-if="nsrModalOpen" style="gap: 16px; width: 340px;">
+               <!-- Anterior -->
+               <q-card class="soft-card shadow-12 q-pa-md col" style="border-radius: 16px;">
+                  <div class="text-subtitle2 text-grey-7 q-mb-sm row items-center justify-between">
+                     <span>Registro Anterior <span class="text-caption" style="opacity: 0.7">(Linha cima)</span></span>
+                     <q-btn icon="close" flat round dense size="sm" @click="nsrModalOpen = false" style="background: rgba(0,0,0,0.05)" />
+                  </div>
+                  <template v-if="nsrPrevRecord">
+                    <div class="q-mb-sm"><RecordTypeBadge :tipo="nsrPrevRecord.tipo" /></div>
+                    <div class="text-h6 text-mono q-my-xs text-primary">NSR: {{ nsrPrevRecord.nsr || '—' }}</div>
+                    <div class="text-body2 text-grey-8 q-mt-sm"><strong>Data/Hora:</strong> {{ formatDataStr(nsrPrevRecord.dataHora) }} {{ formatHoraStr(nsrPrevRecord.dataHora) }} <span class="fuso-chip q-ml-xs" v-if="nsrPrevRecord.fusoHorario">GMT{{ nsrPrevRecord.fusoHorario }}</span></div>
+                    <div class="text-body2 text-grey-8 q-mt-xs" v-if="nsrPrevRecord.cpf || nsrPrevRecord.pis"><strong>{{ store.portaria === '1510' ? 'PIS' : 'CPF' }}:</strong> {{ store.portaria === '1510' ? formatPIS(nsrPrevRecord.cpf || nsrPrevRecord.pis) : formatCPF(nsrPrevRecord.cpf || nsrPrevRecord.pis) }}</div>
+                    <div class="raw-line-modal text-mono q-mt-md">{{ String(nsrPrevRecord.raw || '').substring(0, 50) }}...</div>
+                  </template>
+                  <div v-else class="text-grey-6 text-center q-py-md">Início do arquivo. Nenhum registro anterior.</div>
+               </q-card>
+
+               <!-- Posterior -->
+               <q-card class="soft-card shadow-12 q-pa-md col" style="border-radius: 16px;">
+                  <div class="text-subtitle2 text-grey-7 q-mb-sm row items-center justify-between">
+                     <span>Registro Posterior <span class="text-caption" style="opacity: 0.7">(Linha baixo)</span></span>
+                  </div>
+                  <template v-if="nsrNextRecord">
+                    <div class="q-mb-sm"><RecordTypeBadge :tipo="nsrNextRecord.tipo" /></div>
+                    <div class="text-h6 text-mono q-my-xs text-primary">NSR: {{ nsrNextRecord.nsr || '—' }}</div>
+                    <div class="text-body2 text-grey-8 q-mt-sm"><strong>Data/Hora:</strong> {{ formatDataStr(nsrNextRecord.dataHora) }} {{ formatHoraStr(nsrNextRecord.dataHora) }} <span class="fuso-chip q-ml-xs" v-if="nsrNextRecord.fusoHorario">GMT{{ nsrNextRecord.fusoHorario }}</span></div>
+                    <div class="text-body2 text-grey-8 q-mt-xs" v-if="nsrNextRecord.cpf || nsrNextRecord.pis"><strong>{{ store.portaria === '1510' ? 'PIS' : 'CPF' }}:</strong> {{ store.portaria === '1510' ? formatPIS(nsrNextRecord.cpf || nsrNextRecord.pis) : formatCPF(nsrNextRecord.cpf || nsrNextRecord.pis) }}</div>
+                    <div class="raw-line-modal text-mono q-mt-md">{{ String(nsrNextRecord.raw || '').substring(0, 50) }}...</div>
+                  </template>
+                  <div v-else class="text-grey-6 text-center q-py-md">Fim do arquivo. Nenhum registro posterior.</div>
+               </q-card>
             </div>
          </div>
       </q-dialog>
@@ -155,10 +206,10 @@
 
 </template>
 <script>
-import { defineComponent, ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { defineComponent, ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useValidators } from 'src/composables/useValidators'
-import { useQuasar } from 'quasar'
+import { useQuasar, debounce } from 'quasar'
 import RecordTypeBadge from 'src/components/RecordTypeBadge.vue'
 import RecordDetailDialog from 'src/components/RecordDetailDialog.vue'
 import DayPunchesDialog from 'src/components/DayPunchesDialog.vue'
@@ -174,12 +225,11 @@ export default defineComponent({
   components: { RecordTypeBadge, RecordDetailDialog, DayPunchesDialog },
   setup() {
     const store = useAfdStore()
-    const { validateSingle, validateBulk } = useValidators()
+    const { validateSingle } = useValidators()
     const $q = useQuasar()
 
     const pagination = ref({ rowsPerPage: 0 })
 
-    // ── Altura dinâmica da tabela ──────────────────────────────────────────
     const qTableRef = ref(null)
     const rootRef   = ref(null)
     const tableHeight = ref(600)
@@ -199,8 +249,7 @@ export default defineComponent({
       
       const newHeight = Math.max(200, Math.floor(available - 16 - filtersH))
       
-      // Threshold check to prevent ResizeObserver infinite loops on virtual scroll jumps
-      if (Math.abs(tableHeight.value - newHeight) > 10) {
+      if (Math.abs(tableHeight.value - newHeight) > 5) {
           tableHeight.value = newHeight
       }
     }
@@ -214,7 +263,6 @@ export default defineComponent({
       if (rootRef.value) resizeObserver.observe(rootRef.value)
       window.addEventListener('resize', computeHeight)
       
-      // Fallbacks para garantir que a medida ocorra após montagem
       setTimeout(computeHeight, 50)
       setTimeout(computeHeight, 300)
     })
@@ -234,16 +282,39 @@ export default defineComponent({
     const dayModalOpen = ref(false)
     const dayPunches = ref([])
 
+    const nsrModalOpen = ref(false)
+    const nsrPrevRecord = ref(null)
+    const nsrNextRecord = ref(null)
+
     watch(isDetailOpen, (val) => {
       if (!val) {
         conflictModalOpen.value = false
         dayModalOpen.value = false
+        nsrModalOpen.value = false
       }
     })
 
     const openRecordDetail = (row) => {
       selectedRecord.value = row
       isDetailOpen.value = true
+      
+      // Avalia se esse registro foi flaggado com erro no sequencial lógico do NSR
+      const hasNsrIssue = row.isNsrBreak || (row.erros && row.erros.some(e => e.includes('NSR') || e.includes('sequência') || e.includes('salto')))
+      if (hasNsrIssue) {
+         // Busca o index bruto dele na store
+         const idx = store.records.findIndex(r => r === row)
+         if (idx !== -1) {
+            nsrPrevRecord.value = idx > 0 ? store.records[idx - 1] : null
+            nsrNextRecord.value = idx < store.records.length - 1 ? store.records[idx + 1] : null
+         }
+      }
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    const openNsrNeighborhood = () => {
+       conflictModalOpen.value = false
+       dayModalOpen.value = false
+       nsrModalOpen.value = true 
     }
 
     const openConflict = (nsr) => {
@@ -266,13 +337,42 @@ export default defineComponent({
     }
 
     // ── Filtros ──────────────────────────────────────────────────────────────
+    
+    const isFiltering = ref(false)
+
+    // Helper: liga o spinner, dá chance ao browser de pintar a tela (yield) 
+    // e só depois dispara a rotina sincronizada pesada
+    const applyFilterWithLoading = (actionFn) => {
+        isFiltering.value = true
+        setTimeout(() => {
+            actionFn()
+            // Mais um tick pro vue renderizar as td/tr antes de desligar o loading
+            setTimeout(() => { isFiltering.value = false }, 50)
+        }, 10)
+    }
+
+    // Para evitar lerdeza absurda ao digitar em um arquivo de 500k linhas, 
+    // desacoplamos o input de busca (local) da reatividade da Store (global) via Debounce
+    const localSearchQuery = ref(store.filters.search)
+
     const filter = computed({
       get: () => store.filters.search,
       set: (val) => store.setFilters({ search: val })
     })
+
+    const debouncedApplySearch = debounce((val) => {
+        filter.value = val
+        setTimeout(() => { isFiltering.value = false }, 50)
+    }, 400)
+
+    const onSearchInput = (val) => {
+        isFiltering.value = true
+        debouncedApplySearch(val)
+    }
+
     const statusFilter = computed({
       get: () => store.filters.status,
-      set: (val) => store.setFilters({ status: val })
+      set: (val) => applyFilterWithLoading(() => store.setFilters({ status: val }))
     })
 
     const statusFilterColor = computed(() => {
@@ -288,21 +388,26 @@ export default defineComponent({
     })
 
     const setStatusFilter = (val) => {
-       statusFilter.value = val
-       if (!val) filter.value = ''
+       applyFilterWithLoading(() => {
+           store.setFilters({ status: val })
+           if (!val) {
+               localSearchQuery.value = ''
+               filter.value = ''
+           }
+       })
     }
 
     const tipoFiltro = computed({
       get: () => store.filters.type,
-      set: (val) => store.setFilters({ type: val })
+      set: (val) => applyFilterWithLoading(() => store.setFilters({ type: val }))
     })
     const dataInicio = computed({
        get: () => store.filters.dateStart,
-       set: (val) => store.setFilters({ dateStart: val })
+       set: (val) => applyFilterWithLoading(() => store.setFilters({ dateStart: val }))
     })
     const dataFim = computed({
        get: () => store.filters.dateEnd,
-       set: (val) => store.setFilters({ dateEnd: val })
+       set: (val) => applyFilterWithLoading(() => store.setFilters({ dateEnd: val }))
     })
 
     const tipoOptions = computed(() => {
@@ -318,6 +423,7 @@ export default defineComponent({
         base.push({ label: '6 - Eventos', value: '6' })
         base.push({ label: '7 - Marcação REP-P', value: '7' })
       }
+      base.push({ label: '9 - Trailer', value: '9' })
       return base
     })
 
@@ -393,9 +499,12 @@ export default defineComponent({
         return `${digits.substring(0,3)}.${digits.substring(3,8)}.${digits.substring(8,10)}-${digits.substring(10,11)}`
       }
       if (digits.length === 12) {
-        const trimmed = digits.replace(/^0/, '')
+        const trimmed = digits.replace(/^0/, '') // Tenta ver se é só padding de zero
         if (trimmed.length === 11) {
           return `${trimmed.substring(0,3)}.${trimmed.substring(3,8)}.${trimmed.substring(8,10)}-${trimmed.substring(10,11)}`
+        } else {
+          // Se realmente tem 12 dígitos fortes (alguns fabricantes fazem isso)
+          return `${digits.substring(0,1)}.${digits.substring(1,4)}.${digits.substring(4,9)}.${digits.substring(9,11)}-${digits.substring(11,12)}`
         }
       }
       return pis // fallback
@@ -459,45 +568,69 @@ export default defineComponent({
     })
 
     const customFilterMethod = (rows) => {
-      let recs = rows
       const filters = activeFilters.value
+      const hasStatus = !!filters.status
+      const hasType = !!filters.type
+      const hasStart = !!filters.dateStart
+      const hasEnd = !!filters.dateEnd
+      const hasSearch = !!(filters.search && filters.search.trim())
 
-      if (filters.status === 'errors') {
-        recs = recs.filter(r => r.erros && r.erros.length > 0)
-      } else if (filters.status === 'warnings') {
-        recs = recs.filter(r => r.avisos && r.avisos.length > 0)
+      // Pre-processamento fora do loop para máxima performance
+      const d1 = hasStart ? new Date(filters.dateStart + 'T00:00:00').getTime() : 0
+      const d2 = hasEnd ? new Date(filters.dateEnd + 'T23:59:59').getTime() : 0
+      let q = '', qLower = '', qDigits = ''
+      
+      if (hasSearch) {
+         q = filters.search.trim()
+         qLower = q.toLowerCase()
+         qDigits = normalizeCPF(q)
       }
 
-      if (filters.type) {
-        recs = recs.filter(r => r.tipo === filters.type)
+      // Se não houver nenhum filtro ativo, a tabela nem precisa iterar
+      if (!hasStatus && !hasType && !hasStart && !hasEnd && !hasSearch) {
+         return rows
       }
 
-      if (filters.dateStart) {
-        const d1 = new Date(filters.dateStart + 'T00:00:00').getTime()
-        recs = recs.filter(r => r.dataHora && new Date(r.dataHora).getTime() >= d1)
-      }
+      const recs = []
+      const len = rows.length
 
-      if (filters.dateEnd) {
-        const d2 = new Date(filters.dateEnd + 'T23:59:59').getTime()
-        recs = recs.filter(r => r.dataHora && new Date(r.dataHora).getTime() <= d2)
-      }
+      // Loop único de altíssima performance O(N) invés de 5 filter() seguidos (Evita 250k repetições)
+      for (let i = 0; i < len; i++) {
+        const row = rows[i]
 
-      if (filters.search && filters.search.trim()) {
-         const q = filters.search.trim()
-         const qLower = q.toLowerCase()
-         const qDigits = normalizeCPF(q)
+        // 1. Status Filter
+        if (hasStatus) {
+           if (filters.status === 'errors' && (!row.erros || row.erros.length === 0)) continue
+           if (filters.status === 'warnings' && (!row.avisos || row.avisos.length === 0)) continue
+        }
 
-          recs = recs.filter(row => {
-            if (String(row.nsr || '').includes(q)) return true
-            if (qDigits.length >= 3) {
-               const rowCpf = normalizeCPF(row.cpf || row.pis || '')
-               if (rowCpf.includes(qDigits)) return true
-            }
-            if (row.nomeEmpregado && row.nomeEmpregado.toLowerCase().includes(qLower)) return true
-            if (row.erros && row.erros.some(err => err.toLowerCase().includes(qLower))) return true
-            if (row.avisos && row.avisos.some(warn => (warn.msg || warn).toLowerCase().includes(qLower))) return true
-            return false
-         })
+        // 2. Type Filter
+        if (hasType && row.tipo !== filters.type) continue
+
+        // 3. Date Range (Cachea o .getTime())
+        let rowTime = null
+        if (hasStart || hasEnd) {
+           if (!row.dataHora) continue
+           rowTime = new Date(row.dataHora).getTime()
+           if (isNaN(rowTime)) continue
+        }
+        if (hasStart && rowTime < d1) continue
+        if (hasEnd && rowTime > d2) continue
+
+        // 4. Search Filter
+        if (hasSearch) {
+           let match = false
+           if (String(row.nsr || '').includes(q)) match = true
+           else if (qDigits.length >= 3 && normalizeCPF(row.cpf || row.pis || '').includes(qDigits)) match = true
+           else if (row.nomeEmpregado && row.nomeEmpregado.toLowerCase().includes(qLower)) match = true
+           else if (row.erros && row.erros.some(err => err.toLowerCase().includes(qLower))) match = true
+           else if (row.avisos && row.avisos.some(warn => (warn.msg || warn).toLowerCase().includes(qLower))) match = true
+
+           if (!match) continue
+        }
+
+        // Se sobreviveu a todos os `continue`, é válido
+        recs.push(row)
       }
 
       return recs
@@ -511,16 +644,10 @@ export default defineComponent({
           $q.notify({ type: 'warning', message: errors.join(', ') })
        }
        store.updateRecord(row.id, { [field]: val })
-       validatorsrecheck()
     }
 
     const saveFieldId = (row, val) => {
        store.updateRecord(row.id, { cpf: val, pis: val })
-       validatorsrecheck()
-    }
-
-    const validatorsrecheck = () => {
-        validateBulk(store.records, store.portaria, store.settings.checkNsrSequential)
     }
 
     /**
@@ -590,7 +717,14 @@ export default defineComponent({
       qTableRef,
       rootRef,
       tableHeight,
-      pagination
+      pagination,
+      localSearchQuery,
+      onSearchInput,
+      isFiltering,
+      nsrModalOpen,
+      nsrPrevRecord,
+      nsrNextRecord,
+      openNsrNeighborhood
     }
   }
 })
@@ -607,8 +741,8 @@ export default defineComponent({
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #fff;
-  border-bottom: 2px solid #e0e0e0;
+  background: var(--qm-surface);
+  border-bottom: 2px solid var(--qm-border);
   font-weight: 700;
   font-size: 0.78rem;
   text-transform: uppercase;
@@ -625,15 +759,15 @@ export default defineComponent({
   transition: background-color 0.1s ease;
 }
 .table-row:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: var(--qm-hover-bg, rgba(255, 255, 255, 0.05));
 }
 .row-expanded {
-  background-color: rgba(21, 101, 192, 0.06) !important;
+  background-color: var(--qm-primary-muted, rgba(255, 255, 255, 0.08)) !important;
 }
 
 /* Linha selecionada */
 .sticky-header-table :deep(tbody tr.row-selected) {
-  background-color: rgba(21, 101, 192, 0.07) !important;
+  background-color: var(--qm-primary-muted, rgba(255, 255, 255, 0.1)) !important;
 }
 
 /* ── Expansão inline ───────────────────────────────────────────────────── */
@@ -646,9 +780,9 @@ export default defineComponent({
 }
 
 .expansion-panel {
-  border-top: 2px solid #1565C0;
-  border-bottom: 1px solid #e8eaf6;
-  background: linear-gradient(to bottom, #f3f6fd, #ffffff);
+  border-top: 2px solid var(--qm-primary, #1565C0);
+  border-bottom: 1px solid var(--qm-border-light, #2a2d2f);
+  background: var(--qm-surface);
   padding: 14px 20px 16px;
   animation: slideDown 0.18s ease;
 }
@@ -688,13 +822,13 @@ export default defineComponent({
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #9e9e9e;
+  color: var(--qm-text-muted, #9e9e9e);
   white-space: nowrap;
 }
 
 .exp-value {
   font-size: 0.9rem;
-  color: #212121;
+  color: var(--qm-text, #212121);
   /* Quebra texto longo no limite da célula */
   word-break: break-word;
   overflow-wrap: break-word;
@@ -704,8 +838,8 @@ export default defineComponent({
 /* ── Fuso chip ─────────────────────────────────────────────────────────── */
 .fuso-chip {
   display: inline-block;
-  background: #e8eaf6;
-  color: #3949ab;
+  background: var(--qm-bg-tertiary, #25282a);
+  color: var(--qm-text-primary, #fff);
   border-radius: 4px;
   font-size: 0.72rem;
   font-weight: 600;
@@ -716,17 +850,17 @@ export default defineComponent({
 
 /* ── Raw line ──────────────────────────────────────────────────────────── */
 .exp-raw {
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--qm-border-light, #e0e0e0);
   padding-top: 10px;
 }
 
 .raw-line {
   font-family: 'Roboto Mono', 'Courier New', monospace;
   font-size: 0.72rem;
-  color: #607d8b;
+  color: var(--qm-text-muted, #737373);
   word-break: break-all;
   margin-top: 4px;
-  background: #f5f5f5;
+  background: var(--qm-bg-tertiary, #25282a);
   padding: 6px 10px;
   border-radius: 4px;
   line-height: 1.6;
@@ -734,6 +868,22 @@ export default defineComponent({
 
 .text-mono {
   font-family: 'Roboto Mono', 'Courier New', monospace;
+}
+
+.raw-line-modal {
+  word-break: break-all;
+  border-radius: 12px;
+  border: 1px dashed var(--qm-border-light, #cfd8dc);
+  color: var(--qm-text-secondary, #90a4ae);
+  opacity: 0.85;
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  line-height: 1.6;
+  font-size: 0.8rem;
+  padding: 10px 14px;
+}
+
+[data-theme="dark"] .raw-line-modal {
+  background-color: rgba(255, 255, 255, 0.03) !important;
 }
 
 /* ── Identificador Cell com botão Copiar ───────────────────────────────── */
@@ -751,7 +901,7 @@ export default defineComponent({
   height: 18px;
   font-size: 0.82rem;
   line-height: 1;
-  color: #9e9e9e;
+  color: var(--qm-text-muted, #9e9e9e);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -768,8 +918,8 @@ export default defineComponent({
 }
 
 .copy-btn:hover {
-  color: #1565c0;
-  background: rgba(21, 101, 192, 0.08);
+  color: var(--qm-primary, #1565c0);
+  background: var(--qm-hover-bg, rgba(21, 101, 192, 0.08));
 }
 
 .modal-slide-card {

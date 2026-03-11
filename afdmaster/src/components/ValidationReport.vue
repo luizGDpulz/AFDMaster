@@ -12,7 +12,7 @@
           <q-card class="soft-card bg-negative text-white">
             <q-card-section>
               <div class="text-overline uppercase">Total de Erros</div>
-              <div class="text-h3">{{ store.totalErros }}</div>
+              <div class="text-h3">{{ store.validationSummary.totalErros }}</div>
             </q-card-section>
           </q-card>
         </div>
@@ -20,7 +20,7 @@
           <q-card class="soft-card bg-warning text-black">
             <q-card-section>
               <div class="text-overline uppercase">Total de Avisos</div>
-              <div class="text-h3">{{ store.totalAvisos }}</div>
+              <div class="text-h3">{{ store.validationSummary.totalAvisos }}</div>
             </q-card-section>
           </q-card>
         </div>
@@ -28,7 +28,7 @@
           <q-card class="soft-card bg-info text-white">
             <q-card-section>
               <div class="text-overline uppercase">Registros Alterados</div>
-              <div class="text-h3">{{ store.totalAlterados }}</div>
+              <div class="text-h3">{{ store.validationSummary.totalAlterados }}</div>
             </q-card-section>
           </q-card>
         </div>
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Lista de erros consolidada -->
-        <div class="col-12 q-mt-md" v-if="store.totalErros > 0">
+        <div class="col-12 q-mt-md" v-if="store.validationSummary.totalErros > 0">
            <q-card class="soft-card">
               <q-card-section class="q-pb-none">
                 <div class="text-h6 text-negative">Resumo de Erros Críticos</div>
@@ -50,7 +50,7 @@
               <q-card-section>
                 <q-list separator>
                   <q-item 
-                    v-for="(count, errorMsg) in aggregatedErrors" 
+                    v-for="(count, errorMsg) in store.validationSummary.aggregatedErrors" 
                     :key="errorMsg"
                     clickable
                     v-ripple
@@ -58,13 +58,14 @@
                   >
                      <q-item-section>
                        <q-item-label>{{ errorMsg }}</q-item-label>
+                       <q-item-label caption class="text-secondary cursor-pointer row items-center q-mt-xs">
+                         <q-icon name="search" size="xs" class="q-mr-xs" />
+                         Visualizar os registros com este erro
+                       </q-item-label>
                      </q-item-section>
                      <q-item-section side>
                        <q-badge color="negative" class="text-weight-bold" :label="count + ' ocorrência(s)'" />
                      </q-item-section>
-                     <q-tooltip class="bg-dark text-body2">
-                        Clique para visualizar os registros com este erro
-                     </q-tooltip>
                   </q-item>
                 </q-list>
               </q-card-section>
@@ -72,7 +73,7 @@
         </div>
 
         <!-- Lista de avisos consolidada -->
-        <div class="col-12 q-mt-md" v-if="store.totalAvisos > 0">
+        <div class="col-12 q-mt-md" v-if="store.validationSummary.totalAvisos > 0">
            <q-card class="soft-card border-warning">
               <q-card-section class="q-pb-none">
                 <div class="text-h6 text-warning-dark">Resumo de Avisos</div>
@@ -80,7 +81,7 @@
               <q-card-section>
                 <q-list separator>
                   <q-item 
-                    v-for="(count, warnMsg) in aggregatedWarnings" 
+                    v-for="(count, warnMsg) in store.validationSummary.aggregatedWarnings" 
                     :key="warnMsg"
                     clickable
                     v-ripple
@@ -88,75 +89,77 @@
                   >
                      <q-item-section>
                        <q-item-label>{{ warnMsg }}</q-item-label>
+                       <q-item-label caption class="text-secondary cursor-pointer row items-center q-mt-xs">
+                         <q-icon name="search" size="xs" class="q-mr-xs" />
+                         Visualizar os registros com este aviso
+                       </q-item-label>
                      </q-item-section>
                      <q-item-section side>
                        <q-badge color="warning" text-color="black" class="text-weight-bold" :label="count + ' ocorrência(s)'" />
                      </q-item-section>
-                     <q-tooltip class="bg-dark text-body2">
-                        Clique para visualizar os registros com este aviso
-                     </q-tooltip>
                   </q-item>
                 </q-list>
               </q-card-section>
            </q-card>
         </div>
 
-        <!-- Everything OK State -->
-        <div class="col-12 q-mt-md" v-if="store.totalErros === 0 && store.totalAvisos === 0">
-           <q-card class="soft-card bg-positive text-white">
-              <q-card-section class="text-center">
-                 <q-icon name="check_circle" size="48px" />
-                 <div class="text-h6 q-mt-md">Arquivo sem inconsistências!</div>
-                 <div class="text-subtitle2">Nenhum erro ou aviso detectado. Pronto para exportação.</div>
-              </q-card-section>
-           </q-card>
-        </div>
-      </div>
+    <!-- Everything OK State -->
+    <div class="col-12 q-mt-md" v-if="store.validationSummary.totalErros === 0 && store.validationSummary.totalAvisos === 0">
+        <q-card class="soft-card bg-positive text-white">
+          <q-card-section class="text-center">
+              <q-icon name="check_circle" size="48px" />
+              <div class="text-h6 q-mt-md">Arquivo sem inconsistências!</div>
+              <div class="text-subtitle2">Nenhum erro ou aviso detectado. Pronto para exportação.</div>
+          </q-card-section>
+        </q-card>
+    </div>
+
+    <!-- Rescan Button -->
+    <div class="col-12 row justify-end q-mt-lg">
+      <q-btn
+        unelevated
+        color="primary"
+        icon="refresh"
+        label="Reescanear Arquivo e Atualizar"
+        class="soft-btn soft-btn-primary"
+        @click="rescan"
+      />
     </div>
   </div>
+</div>
+</div>
 </template>
 
 <script>
-import { defineComponent, computed } from 'vue'
+import { defineComponent } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
+import { useValidators } from 'src/composables/useValidators'
+import { useQuasar } from 'quasar'
 
 export default defineComponent({
   name: 'ValidationReport',
-  emits: ['filter-error'],
+  emits: ['filter-error', 'filter-warning'],
   setup() {
     const store = useAfdStore()
+    const { validateBulk } = useValidators()
+    const $q = useQuasar()
 
-    const aggregatedErrors = computed(() => {
-       const counts = {}
-       store.records.forEach(r => {
-          if (r.erros && r.erros.length > 0) {
-             r.erros.forEach(err => {
-                if (!counts[err]) counts[err] = 0
-                counts[err]++
-             })
-          }
-       })
-       return counts
-    })
-
-    const aggregatedWarnings = computed(() => {
-       const counts = {}
-       store.records.forEach(r => {
-          if (r.avisos && r.avisos.length > 0) {
-             r.avisos.forEach(warn => {
-                const wMsg = warn.msg || warn // fallback if it's a string
-                if (!counts[wMsg]) counts[wMsg] = 0
-                counts[wMsg]++
-             })
-          }
-       })
-       return counts
-    })
+    const rescan = () => {
+      // 1. Roda as validações brutas e insere os erros/avisos individuais nas linhas
+      validateBulk(store.records, store.portaria, store.settings)
+      // 2. Condensa tudo nos resumos para exibição limpa e leve
+      store.computeValidationSummary()
+      
+      $q.notify({
+        type: 'positive',
+        message: 'Validações atualizadas com sucesso!',
+        icon: 'check_circle'
+      })
+    }
 
     return {
       store,
-      aggregatedErrors,
-      aggregatedWarnings
+      rescan
     }
   }
 })

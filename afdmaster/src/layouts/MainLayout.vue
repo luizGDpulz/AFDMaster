@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh LpR lff" class="main-layout">
+  <q-layout :view="layoutView" class="main-layout">
     
     <!-- ===== SIDEBAR (Menu Lateral) ===== -->
     <q-drawer
@@ -34,24 +34,28 @@
         <nav class="breadcrumbs">
           <span class="breadcrumb-item">AFDMaster</span>
           <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
-          <span class="breadcrumb-current">{{ currentPageTitle }}</span>
-          <template v-if="currentPageTitle === 'Analisar AFD' && store.activeTabName">
-             <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
-             <span class="breadcrumb-current text-primary">{{ store.activeTabName }}</span>
+          
+          <template v-if="route.path.startsWith('/docs') && store.docsBreadcrumbs && store.docsBreadcrumbs.length > 0">
+             <span class="breadcrumb-item cursor-pointer hover-text-primary" @click="goToDocsRoot">Documentação</span>
+             <template v-for="(crumb, i) in store.docsBreadcrumbs" :key="i">
+                <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
+                <span 
+                   class="breadcrumb-current" 
+                   :class="{'text-primary': i === store.docsBreadcrumbs.length - 1, 'cursor-pointer hover-text-primary': crumb.action && i !== store.docsBreadcrumbs.length - 1}"
+                   @click="crumb.action && i !== store.docsBreadcrumbs.length - 1 ? crumb.action() : null"
+                >
+                   {{ crumb.label }}
+                </span>
+             </template>
+          </template>
+          <template v-else>
+             <span class="breadcrumb-current">{{ currentPageTitle }}</span>
+             <template v-if="currentPageTitle === 'Analisar AFD' && store.activeTabName">
+                <q-icon name="chevron_right" size="18px" class="breadcrumb-separator" />
+                <span class="breadcrumb-current text-primary">{{ store.activeTabName }}</span>
+             </template>
           </template>
         </nav>
-      </div>
-
-      <div class="header-right">
-        <!-- Botões de Ação Rápida -->
-        <q-btn
-          v-if="hasRecords"
-          unelevated
-          class="soft-btn soft-btn-primary"
-          icon="file_download"
-          label="Exportar"
-          to="/export"
-        />
       </div>
     </q-header>
 
@@ -84,11 +88,18 @@ export default defineComponent({
     const route = useRoute()
     const store = useAfdStore()
 
+    const layoutView = computed(() => {
+      // Se na página de docs, o header acompanha o scroll (lhh)
+      // Nas outras, o header fica fixo (lHh)
+      return route.path.startsWith('/docs') ? 'lhh LpR lff' : 'lHh LpR lff'
+    })
+
     // ===== SIDEBAR =====
     const sidebarOpen = ref(true)
 
     const menuItems = [
       { path: '/', label: 'Analisar AFD' },
+      { path: '/docs', label: 'Documentação' },
       { path: '/settings', label: 'Configurações' }
     ]
 
@@ -103,15 +114,15 @@ export default defineComponent({
     })
 
     // ===== THEME =====
-    const isDark = ref(false)
+    const isDark = computed(() => store.isDark)
 
     const applyTheme = () => {
-      document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+      document.documentElement.setAttribute('data-theme', store.isDark ? 'dark' : 'light')
     }
 
     const toggleTheme = () => {
-      isDark.value = !isDark.value
-      localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+      store.isDark = !store.isDark
+      localStorage.setItem('theme', store.isDark ? 'dark' : 'light')
       applyTheme()
       loadBrandColor()
     }
@@ -120,9 +131,9 @@ export default defineComponent({
       // Load theme
       const savedTheme = localStorage.getItem('theme')
       if (savedTheme) {
-        isDark.value = savedTheme === 'dark'
+        store.isDark = savedTheme === 'dark'
       } else {
-        isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+        store.isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       }
       applyTheme()
       loadBrandColor()
@@ -131,13 +142,21 @@ export default defineComponent({
     // ===== STATE MOCK =====
     const hasRecords = ref(false) // placeholder to show export button globally if needed
 
+    // ===== ACTION PARA BREADCRUMB ====
+    const goToDocsRoot = () => {
+       store.clearDocsBreadcrumbs()
+    }
+
     return {
       sidebarOpen,
       currentPageTitle,
       isDark,
       toggleTheme,
       hasRecords,
-      store
+      store,
+      layoutView,
+      route,
+      goToDocsRoot
     }
   }
 })
@@ -202,6 +221,11 @@ export default defineComponent({
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--qm-text-primary);
+  transition: color 0.2s ease;
+}
+
+.hover-text-primary:hover {
+  color: var(--qm-primary);
 }
 
 .header-right {

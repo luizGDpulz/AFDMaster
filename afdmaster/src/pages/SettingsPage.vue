@@ -15,7 +15,7 @@
               <q-item tag="label" v-ripple>
                 <q-item-section>
                   <q-item-label>Validar NSR Sequencial</q-item-label>
-                  <q-item-label caption>
+                  <q-item-label caption class="text-grey-6">
                     Irá exibir um erro se detectar falhas na sequência de Numeração de Registro.
                   </q-item-label>
                 </q-item-section>
@@ -28,7 +28,7 @@
               <q-item tag="label" v-ripple>
                 <q-item-section>
                   <q-item-label>Alerta de Marcação Impar</q-item-label>
-                  <q-item-label caption>
+                  <q-item-label caption class="text-grey-6">
                     Avisa quando há um número ímpar de batidas por funcionário em um único dia.
                   </q-item-label>
                 </q-item-section>
@@ -41,7 +41,7 @@
               <q-item tag="label" v-ripple>
                 <q-item-section>
                   <q-item-label>Aviso de Marcação Duplicada</q-item-label>
-                  <q-item-label caption>
+                  <q-item-label caption class="text-grey-6">
                     Aponta um alerta caso um funcionário bata o ponto em um intervalo de tempo muito curto (dentro da tolerância).
                   </q-item-label>
                 </q-item-section>
@@ -54,7 +54,7 @@
               <q-item v-if="store.settings.checkDuplicates" class="q-pl-xl">
                 <q-item-section>
                   <q-item-label>Minutos de Tolerância</q-item-label>
-                  <q-item-label caption>
+                  <q-item-label caption class="text-grey-6">
                     Tempo máximo (em minutos) entre batidas para serem consideradas duplicadas da mesma ocorrência.
                   </q-item-label>
                 </q-item-section>
@@ -67,7 +67,7 @@
                      min="0" 
                      max="60"
                      suffix="min"
-                     class="soft-input bg-white"
+                     class="soft-input"
                   />
                 </q-item-section>
               </q-item>
@@ -76,7 +76,7 @@
               <q-item tag="label" v-ripple>
                 <q-item-section>
                   <q-item-label>Sempre Reindexar NSR ao Exportar</q-item-label>
-                  <q-item-label caption>
+                  <q-item-label caption class="text-grey-6">
                     Recalcula do 1 até o fim (isso pode ser alterado pontualmente na tela de exportação também).
                   </q-item-label>
                 </q-item-section>
@@ -89,10 +89,10 @@
               <q-item>
                  <q-item-section>
                     <q-item-label class="text-negative">Zerar Memória (Limpar Registros)</q-item-label>
-                    <q-item-label caption>Apaga todo o arquivo lido no momento da aplicação sem salvar.</q-item-label>
+                    <q-item-label caption class="text-grey-6">Apaga todo o arquivo lido no momento da aplicação sem salvar.</q-item-label>
                  </q-item-section>
                  <q-item-section side>
-                    <q-btn flat class="soft-btn text-negative bg-red-1" label="Limpar Dados" @click="confirmClear" />
+                    <q-btn flat class="text-negative soft-btn soft-btn-primary" label="Limpar Dados" @click="confirmClear" style="color: var(--qm-error) !important;" />
                  </q-item-section>
               </q-item>
 

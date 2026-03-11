@@ -4,7 +4,7 @@
     <!-- Logo -->
     <div class="sidebar-header">
       <div class="logo">
-        <q-icon name="document_scanner" size="48px" :color="isDark ? 'white' : 'black'" />
+        <img :src="isDark ? '/app-logo-dark.svg' : '/app-logo.svg'" style="width: 120px; height: 120px;" alt="Logo AFDMaster" />
         <span class="logo-text">AFDMaster</span>
       </div>
     </div>
@@ -69,7 +69,10 @@ export default defineComponent({
 
     const menuItems = [
       { path: '/', label: 'Analisar AFD', icon: 'analytics' },
-      { path: '/settings', label: 'Configurações', icon: 'settings' }
+      { path: '/generator', label: 'Gerador de AFD', icon: 'precision_manufacturing' },
+      { path: '/docs', label: 'Documentação', icon: 'menu_book' },
+      { path: '/settings', label: 'Configurações', icon: 'settings' },
+      { path: '/about', label: 'Sobre', icon: 'info' }
     ]
 
     const isActive = (path) => {
@@ -135,7 +138,7 @@ export default defineComponent({
   }
 
   &.nav-item-active {
-    background: var(--qm-surface);
+    background: var(--qm-bg-primary);
     box-shadow: var(--qm-shadow);
   }
 }

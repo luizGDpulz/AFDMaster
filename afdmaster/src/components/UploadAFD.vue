@@ -2,7 +2,7 @@
   <div class="upload-container text-center q-pa-lg">
     <div 
       class="upload-area full-width soft-card q-pa-xl cursor-pointer"
-      :class="{ 'bg-grey-3': isDragging, 'bg-grey-1': !isDragging }"
+      :class="{ 'dragging': isDragging }"
       @dragover.prevent="onDragOver"
       @dragleave.prevent="onDragLeave"
       @drop.prevent="onDrop"
@@ -17,21 +17,23 @@
         @change="onFileSelected" 
       />
       <div class="empty-state">
-        <q-icon name="upload_file" size="64px" :color="isDragging ? 'primary' : 'grey-4'" />
-        <div class="text-subtitle1 text-grey-7 q-mt-md">Nenhum arquivo selecionado</div>
+        <q-icon name="upload_file" size="64px" :color="isDragging ? 'primary' : 'grey-6'" />
+        <div class="text-subtitle1 text-grey-6 q-mt-md">Nenhum arquivo selecionado</div>
         <div class="text-caption text-grey-5">Formatos suportados: Portaria 1510 e 671 (.txt)</div>
         <div class="text-caption text-primary q-mt-sm text-weight-bold">Clique aqui para abrir ou arraste o arquivo</div>
       </div>
     </div>
 
     <div v-else class="upload-list q-pa-md full-width">
-       <q-item class="soft-card bg-grey-1 q-mb-md">
+       <q-item class="soft-card q-mb-md">
          <q-item-section avatar>
            <q-icon name="description" color="primary" size="32px"/>
          </q-item-section>
          <q-item-section class="text-left">
            <q-item-label class="text-weight-bold ellipsis">{{ selectedFile.name }}</q-item-label>
-           <q-item-label caption>{{ (selectedFile.size / 1024).toFixed(2) }} KB</q-item-label>
+           <q-item-label caption class="text-grey-6">
+             {{ (selectedFile.size / 1024).toFixed(2) }} KB
+           </q-item-label>
          </q-item-section>
          <q-item-section side>
            <q-btn icon="close" flat round dense color="negative" @click="clearFile" :disable="isProcessing || isFinished" />
@@ -148,8 +150,11 @@ export default defineComponent({
         // Validação em Bulk
         validators.validateBulk(records, portaria, store.settings)
 
-        // Salva na Store
+        // Salva na Store inicial para que a agregação possa iterar
         store.loadParsedRecords(records, portaria, lines, fileName)
+        
+        // Agora calcula e slva os resumos cegos
+        store.computeValidationSummary()
         
         $q.notify({ 
           type: 'positive', 
@@ -222,9 +227,14 @@ export default defineComponent({
 .upload-area {
   transition: background-color 0.2s ease;
   border: 2px dashed transparent;
+  background-color: var(--qm-surface);
 }
-.upload-area.bg-grey-3 {
-  border-color: var(--qm-brand);
+.upload-area.dragging {
+  border-color: var(--qm-primary);
+  background-color: var(--qm-hover-bg, rgba(0,0,0,0.05));
+}
+[data-theme="dark"] .upload-area.dragging {
+  background-color: rgba(255,255,255,0.05);
 }
 .empty-state {
   display: flex;
