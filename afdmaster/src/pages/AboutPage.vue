@@ -52,11 +52,10 @@
        </q-card>
 
        <div class="text-caption text-grey-5">
-          Versão 0.0.1 (Beta) &copy; {{ new Date().getFullYear() }}<br>
+          Versão 1.0.0 &copy; {{ new Date().getFullYear() }}<br>
           Desenvolvido com Vue 3, Quasar Framework e Pinia.
        </div>
     </div>
-
   </q-page>
 </template>
 

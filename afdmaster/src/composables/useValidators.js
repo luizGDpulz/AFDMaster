@@ -4,6 +4,7 @@ export function useValidators() {
      */
     const validateBulk = (records, portaria, settings = {}) => {
         let lastNsr = 0
+        let expectedNsr = 0
         let lastDateByEmploee = {} // para verificar cronologia
         // Config limit de data
         const minDate = new Date('1900-01-01T00:00:00')
@@ -24,16 +25,33 @@ export function useValidators() {
             rec.erros = [] // zera
             rec.avisos = [] // zera
 
-            // Validação de NSR (ignorada para o Cabeçalho - tipo 1)
-            if (rec.tipo !== '1') {
+            // Validação de NSR (ignorada para o Cabeçalho - tipo 1 e Trailer - tipo 9)
+            if (rec.tipo !== '1' && rec.tipo !== '9') {
                 if (!rec.nsr || isNaN(rec.nsr)) {
                     rec.erros.push('NSR não numérico ou inexistente')
                 } else {
                     if (checkNsrSequential) {
-                        if (rec.nsr <= lastNsr) {
-                            rec.erros.push('NSR fora de ordem ou duplicado')
+                        if (expectedNsr > 0) {
+                            if (rec.nsr === expectedNsr) {
+                                // Voltou para a sequência base esperada
+                                lastNsr = rec.nsr
+                                expectedNsr = rec.nsr + 1
+                            } else if (rec.nsr === lastNsr + 1) {
+                                // Continuou a partir de um pulo anterior
+                                lastNsr = rec.nsr
+                                expectedNsr = expectedNsr + 1
+                            } else {
+                                // Deu um pulo (quebra de sequência)
+                                rec.erros.push('Quebra de sequência (salto no NSR)')
+                                rec.isNsrBreak = true
+                                lastNsr = rec.nsr
+                                expectedNsr = expectedNsr + 1
+                            }
+                        } else {
+                            // Primeira linha com NSR válido
+                            lastNsr = rec.nsr
+                            expectedNsr = rec.nsr + 1
                         }
-                        lastNsr = rec.nsr
                     }
                 }
             }

@@ -32,6 +32,7 @@ export const useAfdStore = defineStore('afd', {
             checkNsrSequential: true,
             checkOddMarks: true,
             reindexNsrExport: false,
+            reindexNsrStart: 1,
             checkDuplicates: true,
             duplicateToleranceMinutes: 5
         },

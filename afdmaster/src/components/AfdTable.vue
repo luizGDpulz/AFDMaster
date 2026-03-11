@@ -149,20 +149,54 @@
       </q-table>
 
       <!-- Modal Único de Detalhes -> Contém a tela principal e os filhos lado a lado -->
-      <q-dialog v-model="isDetailOpen" transition-show="fade" transition-hide="fade" class="wide-dialog">
+       <q-dialog v-model="isDetailOpen" transition-show="fade" transition-hide="fade" class="wide-dialog">
          <div class="row no-wrap items-start justify-center shadow-0" style="gap: 24px; padding: 12px; background: transparent;">
             <div class="modal-slide-card">
-               <RecordDetailDialog :record="selectedRecord" @hide="isDetailOpen = false" @viewConflict="openConflict" @viewDayPunches="openDayPunches" />
+               <RecordDetailDialog :record="selectedRecord" @hide="isDetailOpen = false" @viewConflict="openConflict" @viewDayPunches="openDayPunches" @viewNsrNeighborhood="openNsrNeighborhood" />
             </div>
 
             <!-- Modal Secundário para Marcação Conflitante -->
-            <div class="modal-slide-card" v-if="conflictModalOpen">
-               <RecordDetailDialog :record="conflictingRecord" is-child @hide="conflictModalOpen = false" @viewDayPunches="openDayPunches" />
+            <div class="modal-slide-card" v-if="conflictModalOpen && !nsrModalOpen">
+               <RecordDetailDialog :record="conflictingRecord" is-child @hide="conflictModalOpen = false" @viewDayPunches="openDayPunches" @viewNsrNeighborhood="openNsrNeighborhood" />
             </div>
             
             <!-- Modal Secundário para Marcações do Dia -->
-            <div class="modal-slide-card" v-if="dayModalOpen">
+            <div class="modal-slide-card" v-if="dayModalOpen && !nsrModalOpen">
                <DayPunchesDialog :punches="dayPunches" @hide="dayModalOpen = false" />
+            </div>
+
+            <!-- Modal Secundário para Vizinhança NSR -->
+            <div class="modal-slide-card flex column no-wrap" v-if="nsrModalOpen" style="gap: 16px; width: 340px;">
+               <!-- Anterior -->
+               <q-card class="soft-card shadow-12 q-pa-md col" style="border-radius: 16px;">
+                  <div class="text-subtitle2 text-grey-7 q-mb-sm row items-center justify-between">
+                     <span>Registro Anterior <span class="text-caption" style="opacity: 0.7">(Linha cima)</span></span>
+                     <q-btn icon="close" flat round dense size="sm" @click="nsrModalOpen = false" style="background: rgba(0,0,0,0.05)" />
+                  </div>
+                  <template v-if="nsrPrevRecord">
+                    <div class="q-mb-sm"><RecordTypeBadge :tipo="nsrPrevRecord.tipo" /></div>
+                    <div class="text-h6 text-mono q-my-xs text-primary">NSR: {{ nsrPrevRecord.nsr || '—' }}</div>
+                    <div class="text-body2 text-grey-8 q-mt-sm"><strong>Data/Hora:</strong> {{ formatDataStr(nsrPrevRecord.dataHora) }} {{ formatHoraStr(nsrPrevRecord.dataHora) }} <span class="fuso-chip q-ml-xs" v-if="nsrPrevRecord.fusoHorario">GMT{{ nsrPrevRecord.fusoHorario }}</span></div>
+                    <div class="text-body2 text-grey-8 q-mt-xs" v-if="nsrPrevRecord.cpf || nsrPrevRecord.pis"><strong>{{ store.portaria === '1510' ? 'PIS' : 'CPF' }}:</strong> {{ store.portaria === '1510' ? formatPIS(nsrPrevRecord.cpf || nsrPrevRecord.pis) : formatCPF(nsrPrevRecord.cpf || nsrPrevRecord.pis) }}</div>
+                    <div class="raw-line-modal text-mono q-mt-md">{{ String(nsrPrevRecord.raw || '').substring(0, 50) }}...</div>
+                  </template>
+                  <div v-else class="text-grey-6 text-center q-py-md">Início do arquivo. Nenhum registro anterior.</div>
+               </q-card>
+
+               <!-- Posterior -->
+               <q-card class="soft-card shadow-12 q-pa-md col" style="border-radius: 16px;">
+                  <div class="text-subtitle2 text-grey-7 q-mb-sm row items-center justify-between">
+                     <span>Registro Posterior <span class="text-caption" style="opacity: 0.7">(Linha baixo)</span></span>
+                  </div>
+                  <template v-if="nsrNextRecord">
+                    <div class="q-mb-sm"><RecordTypeBadge :tipo="nsrNextRecord.tipo" /></div>
+                    <div class="text-h6 text-mono q-my-xs text-primary">NSR: {{ nsrNextRecord.nsr || '—' }}</div>
+                    <div class="text-body2 text-grey-8 q-mt-sm"><strong>Data/Hora:</strong> {{ formatDataStr(nsrNextRecord.dataHora) }} {{ formatHoraStr(nsrNextRecord.dataHora) }} <span class="fuso-chip q-ml-xs" v-if="nsrNextRecord.fusoHorario">GMT{{ nsrNextRecord.fusoHorario }}</span></div>
+                    <div class="text-body2 text-grey-8 q-mt-xs" v-if="nsrNextRecord.cpf || nsrNextRecord.pis"><strong>{{ store.portaria === '1510' ? 'PIS' : 'CPF' }}:</strong> {{ store.portaria === '1510' ? formatPIS(nsrNextRecord.cpf || nsrNextRecord.pis) : formatCPF(nsrNextRecord.cpf || nsrNextRecord.pis) }}</div>
+                    <div class="raw-line-modal text-mono q-mt-md">{{ String(nsrNextRecord.raw || '').substring(0, 50) }}...</div>
+                  </template>
+                  <div v-else class="text-grey-6 text-center q-py-md">Fim do arquivo. Nenhum registro posterior.</div>
+               </q-card>
             </div>
          </div>
       </q-dialog>
@@ -248,16 +282,39 @@ export default defineComponent({
     const dayModalOpen = ref(false)
     const dayPunches = ref([])
 
+    const nsrModalOpen = ref(false)
+    const nsrPrevRecord = ref(null)
+    const nsrNextRecord = ref(null)
+
     watch(isDetailOpen, (val) => {
       if (!val) {
         conflictModalOpen.value = false
         dayModalOpen.value = false
+        nsrModalOpen.value = false
       }
     })
 
     const openRecordDetail = (row) => {
       selectedRecord.value = row
       isDetailOpen.value = true
+      
+      // Avalia se esse registro foi flaggado com erro no sequencial lógico do NSR
+      const hasNsrIssue = row.isNsrBreak || (row.erros && row.erros.some(e => e.includes('NSR') || e.includes('sequência') || e.includes('salto')))
+      if (hasNsrIssue) {
+         // Busca o index bruto dele na store
+         const idx = store.records.findIndex(r => r === row)
+         if (idx !== -1) {
+            nsrPrevRecord.value = idx > 0 ? store.records[idx - 1] : null
+            nsrNextRecord.value = idx < store.records.length - 1 ? store.records[idx + 1] : null
+         }
+      }
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    const openNsrNeighborhood = () => {
+       conflictModalOpen.value = false
+       dayModalOpen.value = false
+       nsrModalOpen.value = true 
     }
 
     const openConflict = (nsr) => {
@@ -663,7 +720,11 @@ export default defineComponent({
       pagination,
       localSearchQuery,
       onSearchInput,
-      isFiltering
+      isFiltering,
+      nsrModalOpen,
+      nsrPrevRecord,
+      nsrNextRecord,
+      openNsrNeighborhood
     }
   }
 })
@@ -807,6 +868,22 @@ export default defineComponent({
 
 .text-mono {
   font-family: 'Roboto Mono', 'Courier New', monospace;
+}
+
+.raw-line-modal {
+  word-break: break-all;
+  border-radius: 12px;
+  border: 1px dashed var(--qm-border-light, #cfd8dc);
+  color: var(--qm-text-secondary, #90a4ae);
+  opacity: 0.85;
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  line-height: 1.6;
+  font-size: 0.8rem;
+  padding: 10px 14px;
+}
+
+[data-theme="dark"] .raw-line-modal {
+  background-color: rgba(255, 255, 255, 0.03) !important;
 }
 
 /* ── Identificador Cell com botão Copiar ───────────────────────────────── */

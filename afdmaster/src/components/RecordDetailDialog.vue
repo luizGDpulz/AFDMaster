@@ -70,8 +70,9 @@
               </div>
               <div class="detail-item" v-if="record.erros && record.erros.length > 0">
                 <div class="detail-label text-negative">Erros de Validação</div>
-                <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
-                  • {{ e }}
+                <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                  <span class="q-pr-sm">• {{ e }}</span>
+                  <q-btn v-if="e.includes('salto no NSR') || e.includes('Quebra de sequência')" size="sm" color="negative" outline label="Ver Vizinhança" dense flat @click="$emit('viewNsrNeighborhood')" />
                 </div>
               </div>
               <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
@@ -136,8 +137,9 @@
               </div>
               <div class="detail-item" v-if="record.erros && record.erros.length > 0">
                 <div class="detail-label text-negative">Erros de Validação</div>
-                <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
-                  • {{ e }}
+                <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                  <span class="q-pr-sm">• {{ e }}</span>
+                  <q-btn v-if="e.includes('salto no NSR') || e.includes('Quebra de sequência')" size="sm" color="negative" outline label="Ver Vizinhança" dense flat @click="$emit('viewNsrNeighborhood')" />
                 </div>
               </div>
               <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
@@ -200,8 +202,9 @@
             </div>
             <div class="detail-item" v-if="record.erros && record.erros.length > 0">
               <div class="detail-label text-negative">Erros de Validação</div>
-              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
-                • {{ e }}
+              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ e }}</span>
+                <q-btn v-if="e.includes('salto no NSR') || e.includes('Quebra de sequência')" size="sm" color="negative" outline label="Ver Vizinhança" dense flat @click="$emit('viewNsrNeighborhood')" />
               </div>
             </div>
             <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
@@ -247,8 +250,9 @@
             </div>
             <div class="detail-item" v-if="record.erros && record.erros.length > 0">
               <div class="detail-label text-negative">Erros de Validação</div>
-              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
-                • {{ e }}
+              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ e }}</span>
+                <q-btn v-if="e.includes('salto no NSR') || e.includes('Quebra de sequência')" size="sm" color="negative" outline label="Ver Vizinhança" dense flat @click="$emit('viewNsrNeighborhood')" />
               </div>
             </div>
             <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
@@ -372,8 +376,9 @@
 
             <div class="detail-item" v-if="record.erros && record.erros.length > 0">
               <div class="detail-label text-negative">Erros de Validação</div>
-              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
-                • {{ e }}
+              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ e }}</span>
+                <q-btn v-if="e.includes('salto no NSR') || e.includes('Quebra de sequência')" size="sm" color="negative" outline label="Ver Vizinhança" dense flat @click="$emit('viewNsrNeighborhood')" />
               </div>
             </div>
 
@@ -410,6 +415,9 @@
             >
               Evento de Segurança
             </q-chip>
+            <div class="text-subtitle2 text-negative text-weight-bold q-ml-sm" v-if="record.tipoEvento">
+              {{ formatEventoSensivel(record.tipoEvento) }}
+            </div>
           </div>
 
           <div class="detail-grid">
@@ -427,20 +435,16 @@
               <div class="detail-label">Fuso Horário</div>
               <span class="fuso-chip">GMT{{ record.fusoHorario }}</span>
             </div>
-            <div class="detail-item" v-if="record.tipoEvento">
-              <div class="detail-label">Descrição do Evento Sensível</div>
-              <div class="detail-value text-negative text-weight-bold">
-                {{ formatEventoSensivel(record.tipoEvento) }}
-              </div>
-            </div>
+
             <div class="detail-item" v-if="record.crc">
               <div class="detail-label">CRC-16</div>
               <div class="detail-value text-mono text-grey-7">{{ record.crc }}</div>
             </div>
             <div class="detail-item" v-if="record.erros && record.erros.length > 0">
               <div class="detail-label text-negative">Erros de Validação</div>
-              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
-                • {{ e }}
+              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ e }}</span>
+                <q-btn v-if="e.includes('salto no NSR') || e.includes('Quebra de sequência')" size="sm" color="negative" outline label="Ver Vizinhança" dense flat @click="$emit('viewNsrNeighborhood')" />
               </div>
             </div>
             <div class="detail-item" v-if="record.avisos && record.avisos.length > 0">
@@ -488,8 +492,9 @@
             </div>
             <div class="detail-item" v-if="record.erros && record.erros.length > 0">
               <div class="detail-label text-negative">Erros de Validação</div>
-              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold">
-                • {{ e }}
+              <div v-for="(e, i) in record.erros" :key="i" class="detail-value text-negative text-weight-bold row items-center justify-between no-wrap q-mb-xs">
+                <span class="q-pr-sm">• {{ e }}</span>
+                <q-btn v-if="e.includes('salto no NSR') || e.includes('Quebra de sequência')" size="sm" color="negative" outline label="Ver Vizinhança" dense flat @click="$emit('viewNsrNeighborhood')" />
               </div>
             </div>
             

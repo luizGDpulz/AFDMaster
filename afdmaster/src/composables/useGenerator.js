@@ -1,6 +1,13 @@
 /**
  * Gerador de Arquivo AFD - Portaria 1510 e 671
+ *
+ * Estratégia de geração:
+ *   1. Registro NÃO alterado + sem reindexação → usa rec.raw original integralmente (preservação total)
+ *   2. Registro ALTERADO com rec.raw disponível → usa rec.raw atualizado + ajusta NSR se reindexando
+ *   3. Registro ALTERADO sem rec.raw → reconstrói a linha a partir dos campos em memória (fallback)
  */
+
+import { appendCrc671 } from 'src/utils/crc'
 
 export function useGenerator() {
 
@@ -10,31 +17,52 @@ export function useGenerator() {
         while (s.length < size) s = '0' + s
         return s
     }
+
     /**
      * Gera o conteúdo final do arquivo considerando a portaria.
      */
     const generateFileContent = (records, portaria, options = {}) => {
-        const { reindexNsr } = options
+        const { reindexNsr, reindexNsrStart } = options
 
         let conteudoFinal = []
-        let currentNsr = 1
+        let currentNsr = reindexNsr ? (parseInt(reindexNsrStart) || 1) : 1
 
         for (const rec of records) {
-            // Usa a linha original caso não tenha sido alterada, para preservar 100% da integridade
-            // dos dados originais que estavam corretos.
+            // ── Caso 1: Não alterado e sem reindexação ──────────────────────────────
+            // Usa a linha original para preservar 100% da integridade do arquivo original.
             if (!rec.alterado && !reindexNsr && rec.raw) {
                 conteudoFinal.push(rec.raw)
+                currentNsr++
                 continue
             }
 
+            // ── Caso 2: Alterado com rec.raw disponível ─────────────────────────────
+            // O editor já atualizou rec.raw (substituição, conversão de portaria, omissão de NSR).
+            // Apenas ajustamos o NSR no início da linha se reindexando e recalculamos o CRC se portaria 671.
+            if (rec.raw) {
+                const nsrToUse = reindexNsr ? currentNsr : (rec.nsr || currentNsr)
+                const nsrPadded = padZeros(nsrToUse, 9)
+                let modifiedRaw = nsrPadded + rec.raw.substring(9)
+
+                // No formato 671, se a linha foi alterada, o CRC antigo que está no final 
+                // da string precisa ser refeito.
+                if (portaria === '671' && modifiedRaw.length >= 5) {
+                    const withoutCrc = modifiedRaw.substring(0, modifiedRaw.length - 4)
+                    modifiedRaw = appendCrc671(withoutCrc)
+                }
+
+                conteudoFinal.push(modifiedRaw)
+                currentNsr++
+                continue
+            }
+
+            // ── Caso 3: Fallback — sem rec.raw (registro criado programaticamente) ──
             const nsrToUse = reindexNsr ? currentNsr : rec.nsr
             let linhaGerada = ''
 
             if (portaria === '1510') {
                 if (rec.tipo === '3') {
-                    // NSR(9) + TIPO(1) + DATA(8) + HORA(4) + PIS(11)
                     const nsrPadded = padZeros(nsrToUse, 9)
-                    const tipoPadded = '3'
 
                     let dtStr = '00000000'
                     let hrStr = '0000'
@@ -46,7 +74,6 @@ export function useGenerator() {
                             const mon = padZeros(dt.getMonth() + 1, 2)
                             const yyyy = padZeros(dt.getFullYear(), 4)
                             dtStr = `${day}${mon}${yyyy}`
-
                             const hh = padZeros(dt.getHours(), 2)
                             const mi = padZeros(dt.getMinutes(), 2)
                             hrStr = `${hh}${mi}`
@@ -54,26 +81,12 @@ export function useGenerator() {
                     }
 
                     const pisPadded = padZeros(rec.pis || rec.cpf || '0', 12)
-                    linhaGerada = `${nsrPadded}${tipoPadded}${dtStr}${hrStr}${pisPadded}`
-
-                } else {
-                    // Outros tipos, como o gerador é complexo, no AFDMaster alteramos só 
-                    // a Posição NSR do RAW original e mantemos o resto se for apenas reindex
-                    if (rec.raw) {
-                        const nsrPadded = padZeros(nsrToUse, 9)
-                        linhaGerada = nsrPadded + rec.raw.substring(9)
-                    } else {
-                        // fallback se o RAW foi extirpado
-                        linhaGerada = ''
-                    }
+                    linhaGerada = `${nsrPadded}3${dtStr}${hrStr}${pisPadded}`
                 }
             } else {
-                // Formato 671 (muito similar, mas cpf e com ISO dates)
-                // No 3 é igual, mas cpf = 12 posicoes e data é YYYY-MM-DDTHH:mm:00-0300
-                if (rec.tipo === '3' || rec.tipo === '7') {
+                // Portaria 671
+                if (rec.tipo === '3') {
                     const nsrPadded = padZeros(nsrToUse, 9)
-                    const tipoPadded = rec.tipo
-
                     let dhStr671 = '0000-00-00T00:00:00-0300'
 
                     if (rec.dataHora) {
@@ -84,27 +97,12 @@ export function useGenerator() {
                             const yyyy = padZeros(dt.getFullYear(), 4)
                             const hh = padZeros(dt.getHours(), 2)
                             const mi = padZeros(dt.getMinutes(), 2)
-
                             dhStr671 = `${yyyy}-${mon}-${day}T${hh}:${mi}:00-0300`
                         }
                     }
 
                     const cpfPadded = padZeros(rec.cpf || rec.pis || '0', 12)
-
-                    if (rec.tipo === '7') {
-                        // REP-P punch: nsr(9) + 7 + dh(24) + cpf(12) + dh_utc(24) + timezone(3) + hash(64)
-                        // Simplification since usually we just reindex, but if missing we fallback string:
-                        const hash = ''.padStart(64, 'A')
-                        linhaGerada = `${nsrPadded}${tipoPadded}${dhStr671}${cpfPadded}${dhStr671}050${hash}`
-                    } else {
-                        linhaGerada = `${nsrPadded}${tipoPadded}${dhStr671}${cpfPadded}`
-                    }
-                } else {
-                    if (rec.raw) {
-                        const nsrPadded = padZeros(nsrToUse, 9)
-                        // Preserve original line but update NSR
-                        linhaGerada = nsrPadded + rec.raw.substring(9)
-                    }
+                    linhaGerada = `${nsrPadded}3${dhStr671}${cpfPadded}`
                 }
             }
 

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <q-page class="fade-in q-px-lg q-pt-sm q-pb-xs column">
     <!-- Header/Toolbar -->
     <div class="row items-center q-mb-sm">
@@ -39,7 +39,7 @@
         >
           <q-tab name="records" class="q-mx-sm" icon="table_view" label="Registros" />
           <q-tab name="validation" class="q-mx-sm" icon="rule" label="Validações" />
-          <q-tab name="editor" class="q-mx-sm" icon="edit_document" label="Edição/Lote" />
+          <q-tab name="editor" class="q-mx-sm" icon="edit_document" label="Edição" />
           <q-tab name="export" class="q-mx-sm" icon="file_download" label="Exportar" />
         </q-tabs>
 
@@ -100,13 +100,6 @@
               </div>
 
               <div class="text-center">
-                 <q-toggle
-                    v-model="store.settings.reindexNsrExport"
-                    label="Reindexar NSR (Forçar recalculo sequencial no arquivo final)"
-                    color="primary"
-                    class="q-mb-md text-weight-medium"
-                 />
-                 <br />
                  <q-btn
                     color="primary"
                     icon="save_alt"
@@ -158,7 +151,7 @@ export default defineComponent({
     const tab = ref('records')
     
     // Mapeamento para o Breadcrumb do Layout
-    const tabLabels = { records: 'Registros', validation: 'Validações', export: 'Exportar', editor: 'Edição Avançada' }
+    const tabLabels = { records: 'Registros', validation: 'Validações', export: 'Exportar', editor: 'Edição' }
     watch(tab, (newVal) => {
        store.activeTabName = tabLabels[newVal]
     }, { immediate: true })
@@ -204,52 +197,80 @@ export default defineComponent({
 
     const downloadFile = () => {
        try {
+          const hasEdits = store.records.some(r => r.alterado)
+          const ef = exportFilters.value
+          const hasFilters = !!(ef.dateStart || ef.dateEnd ||
+                               (ef.nsrStart !== null && ef.nsrStart !== '') ||
+                               (ef.nsrEnd !== null && ef.nsrEnd !== ''))
+
+          if (!hasEdits && !hasFilters && !store.settings.reindexNsrExport) {
+             return $q.notify({
+                type: 'warning',
+                icon: 'info',
+                message: 'Nenhuma edição ou filtro foi aplicado. O arquivo exportado seria idêntico ao original. Faça uma edição ou defina um filtro antes de exportar.',
+                timeout: 5000
+             })
+          }
+
           $q.loading.show({ message: 'Preparando exportação...' })
 
           setTimeout(() => {
-             // 1. Filtrar a base na Memória antes de gerar o Export String
-             let dataset = store.records
-             
-             if (exportFilters.value.dateStart) {
-                const sd = new Date(exportFilters.value.dateStart + 'T00:00:00')
-                dataset = dataset.filter(r => r.dataHora && r.dataHora >= sd)
-             }
-             if (exportFilters.value.dateEnd) {
-                const ed = new Date(exportFilters.value.dateEnd + 'T23:59:59')
-                dataset = dataset.filter(r => r.dataHora && r.dataHora <= ed)
-             }
-             if (exportFilters.value.nsrStart !== null && exportFilters.value.nsrStart !== '') {
-                const ns = Number(exportFilters.value.nsrStart)
-                dataset = dataset.filter(r => r.nsr && Number(r.nsr) >= ns)
-             }
-             if (exportFilters.value.nsrEnd !== null && exportFilters.value.nsrEnd !== '') {
-                const ne = Number(exportFilters.value.nsrEnd)
-                dataset = dataset.filter(r => r.nsr && Number(r.nsr) <= ne)
-             }
-
-             if (dataset.length === 0) {
+             try {
+                 let dataset = store.records
+    
+                 if (ef.dateStart) {
+                    const sd = new Date(ef.dateStart + 'T00:00:00').getTime()
+                    dataset = dataset.filter(r => r.dataHora && new Date(r.dataHora).getTime() >= sd)
+                 }
+                 if (ef.dateEnd) {
+                    const ed = new Date(ef.dateEnd + 'T23:59:59').getTime()
+                    dataset = dataset.filter(r => r.dataHora && new Date(r.dataHora).getTime() <= ed)
+                 }
+                 if (ef.nsrStart !== null && ef.nsrStart !== '') {
+                    const ns = Number(ef.nsrStart)
+                    dataset = dataset.filter(r => r.nsr && Number(r.nsr) >= ns)
+                 }
+                 if (ef.nsrEnd !== null && ef.nsrEnd !== '') {
+                    const ne = Number(ef.nsrEnd)
+                    dataset = dataset.filter(r => r.nsr && Number(r.nsr) <= ne)
+                 }
+    
+                 if (dataset.length === 0) {
+                     $q.loading.hide()
+                     return $q.notify({ type: 'warning', message: 'Os filtros excluíram todos os registros. O AFD exportado estaria vazio.' })
+                 }
+    
+                 const content = generateFileContent(dataset, store.portaria, {
+                   reindexNsr: store.settings.reindexNsrExport,
+                   reindexNsrStart: store.settings.reindexNsrStart
+                 })
+                 
+                 if (!content || content.length === 0) {
+                      throw new Error('Conteúdo gerado vazio!')
+                 }
+    
+                 const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+                 const url = URL.createObjectURL(blob)
+                 const link = document.createElement('a')
+                 link.href = url
+                 link.download = `exported_afd_${store.portaria}_${Date.now()}.txt`
+                 document.body.appendChild(link)
+                 link.click()
+                 document.body.removeChild(link)
+                 URL.revokeObjectURL(url)
+    
                  $q.loading.hide()
-                 return $q.notify({ type: 'warning', message: 'Os filtros informados excluíram todos os registros. O AFD exportado estaria vazio.' })
+                 $q.notify({ type: 'positive', message: `${dataset.length} registros exportados com sucesso!` })
+             } catch (errInner) {
+                 $q.loading.hide()
+                 $q.notify({ type: 'negative', message: 'Falha interna ao gerar arquivo: ' + (errInner.message || errInner) })
+                 console.error('Erro na exportação (Timeout):', errInner)
              }
-
-             const content = generateFileContent(dataset, store.portaria, { reindexNsr: store.settings.reindexNsrExport })
-             
-             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-             const url = URL.createObjectURL(blob)
-             const link = document.createElement('a')
-             link.href = url
-             link.download = `exported_afd_${store.portaria}_${Date.now()}.txt`
-             document.body.appendChild(link)
-             link.click()
-             document.body.removeChild(link)
-             URL.revokeObjectURL(url)
-
-             $q.loading.hide()
-             $q.notify({ type: 'positive', message: `${dataset.length} registros exportados com sucesso!` })
           }, 50)
        } catch (err) {
-          $q.loading.hide()
-          $q.notify({ type: 'negative', message: 'Erro ao gerar arquivo: ' + err.message })
+          if ($q && $q.loading) $q.loading.hide()
+          $q.notify({ type: 'negative', message: 'Erro crítico na exportação: ' + (err.message || err) })
+          console.error('Erro na exportação:', err)
        }
     }
 
