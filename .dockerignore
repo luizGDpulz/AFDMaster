@@ -1,0 +1,14 @@
+# Dependencies and build output – never copy these into the image
+afdmaster/node_modules
+afdmaster/dist
+afdmaster/.quasar
+
+# Editor and OS noise
+.git
+.vscode
+.idea
+**/.DS_Store
+**/Thumbs.db
+
+# Local env overrides
+**/.env.local*
