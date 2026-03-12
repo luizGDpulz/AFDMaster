@@ -103,7 +103,7 @@
                  <div class="col-12 col-md-5">
                     <q-card class="soft-card" flat bordered>
                        <q-card-section>
-                          <div class="text-subtitle2 q-mb-sm text-warning-dark">Intervalo de NSR</div>
+                          <div class="text-subtitle2 q-mb-sm text-primary">Intervalo de NSR</div>
                           <div class="row q-col-gutter-sm">
                              <div class="col-6">
                                 <q-input dense outlined v-model.number="exportFilters.nsrStart" type="number" label="NSR Mínimo" class="soft-input" />

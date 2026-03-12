@@ -206,16 +206,15 @@
                 <q-item-section>
                   <div class="row q-col-gutter-md items-end">
                     <div class="col-12 col-md-5">
-                      <q-input outlined dense v-model="emp.name" label="NOME DO FUNCIONÁRIO" class="soft-input" />
+                      <q-input outlined dense v-model="emp.name" label="Nome do Funcionário" class="soft-input" />
                     </div>
                     <div class="col-12 col-md-3">
                       <q-input
                         outlined dense
                         v-model="emp.pis"
-                        :label="genConfig.portaria === '1510' ? 'PIS (11 ou 12 dígitos)' : 'CPF (11 dígitos)'"
+                        :label="isDemo ? 'Documento fixo no modo demo' : (genConfig.portaria === '1510' ? 'PIS (11 ou 12 dígitos)' : 'CPF (11 dígitos)')"
                         class="soft-input"
                         :readonly="isDemo"
-                        :hint="isDemo ? 'Documento fixo no modo demo' : undefined"
                       />
                     </div>
                     <div class="col-12 col-md-1">
@@ -227,7 +226,7 @@
                   <div class="q-mt-md q-pa-sm rounded-borders bg-surface" style="border: 1px dashed var(--qm-border-light);">
                     <div class="text-caption text-grey-8 q-mb-sm row justify-between items-center">
                       <span>Horários da Jornada (Gerações diárias para cada dia do Período):</span>
-                      <q-btn size="sm" icon="add_time" unelevated color="primary" class="soft-btn soft-btn-primary" label="Nova marcação" @click="addPunchToEmp(emp)" />
+                      <q-btn size="sm" unelevated color="primary" class="soft-btn soft-btn-primary" label="Nova marcação" @click="addPunchToEmp(emp)" />
                     </div>
                     
                     <div class="row q-gutter-sm">
@@ -491,8 +490,8 @@ export default defineComponent({
     }
 
     const addPunchToEmp = (emp) => {
-       emp.punches.push('18:00')
-    }
+       emp.punches.push('00:00')
+      }
 
     // Utilitários de String base
     const pad = (str, len, char = '0', right = false) => {

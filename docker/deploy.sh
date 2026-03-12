@@ -3,15 +3,18 @@
 # deploy.sh – Build and run the AFDMaster Docker container
 #
 # Usage:
-#   ./docker/deploy.sh [PORT]
+#   ./docker/deploy.sh [--rebuild] [PORT]
 #
 # Arguments:
-#   PORT   Host port to expose (default: 8080)
-#          The container's nginx always listens internally on port 80.
+#   --rebuild  Force rebuild: removes container and image before building
+#   PORT       Host port to expose (default: 8080)
+#              The container's nginx always listens internally on port 80.
 #
 # Examples:
-#   ./docker/deploy.sh          # starts on port 8080
-#   ./docker/deploy.sh 3500     # starts on port 3500
+#   ./docker/deploy.sh          # normal deploy on port 8080
+#   ./docker/deploy.sh 3500     # normal deploy on port 3500
+#   ./docker/deploy.sh --rebuild     # clean rebuild on port 8080
+#   ./docker/deploy.sh --rebuild 3500 # clean rebuild on port 3500
 #
 # Typical reverse-proxy setup (nginx Proxy Manager / Caddy / Traefik):
 #   Point the proxy to  http://localhost:<PORT>
@@ -24,14 +27,53 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 IMAGE_NAME="afdmaster"
 CONTAINER_NAME="afdmaster"
-PORT="${1:-8080}"               # host port exposed to the proxy
 INTERNAL_PORT="80"              # nginx listens on this inside the container
+
+# ---------------------------------------------------------------------------
+# Parse arguments: --rebuild, PORT
+# ---------------------------------------------------------------------------
+REBUILD=false
+PORT="8080"
+
+if [[ ${1:-} == "--rebuild" ]]; then
+  REBUILD=true
+  PORT="${2:-8080}"
+else
+  PORT="${1:-8080}"
+fi
 
 # ---------------------------------------------------------------------------
 # Resolve repo root regardless of where the script is called from
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# ---------------------------------------------------------------------------
+# Cleanup (if --rebuild was specified)
+# ---------------------------------------------------------------------------
+if [[ "${REBUILD}" == "true" ]]; then
+  echo ""
+  echo "==> REBUILD MODE: Cleaning up existing container and image"
+  echo ""
+
+  # Stop and remove container
+  if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+    echo "    Stopping and removing container: ${CONTAINER_NAME}"
+    docker rm -f "${CONTAINER_NAME}"
+  else
+    echo "    No existing container found"
+  fi
+
+  # Remove image
+  if docker images --format '{{.Repository}}:{{.Tag}}' | grep -q "^${IMAGE_NAME}:latest$"; then
+    echo "    Removing image: ${IMAGE_NAME}:latest"
+    docker rmi "${IMAGE_NAME}:latest"
+  else
+    echo "    No existing image found"
+  fi
+
+  echo ""
+fi
 
 # ---------------------------------------------------------------------------
 # Prompt: Demo Mode
