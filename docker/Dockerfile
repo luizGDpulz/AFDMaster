@@ -8,8 +8,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy manifest + quasar config first so dependency layers are cached.
-# quasar.config.js is required by the `quasar prepare` postinstall script.
-COPY afdmaster/package.json afdmaster/package-lock.json afdmaster/quasar.config.js ./
+# quasar.config.js and index.html are required by the `quasar prepare` postinstall script.
+COPY afdmaster/package.json afdmaster/package-lock.json afdmaster/quasar.config.js afdmaster/index.html ./
 
 # Install all deps (postinstall runs `quasar prepare`)
 RUN npm ci
