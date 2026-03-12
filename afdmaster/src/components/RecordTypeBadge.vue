@@ -83,8 +83,8 @@ export default defineComponent({
       backgroundColor: resolvedColor.value,
       color: '#ffffff',
       borderRadius: '999px',    // pill shape
-      padding: '3px 10px',
-      fontSize: '0.72rem',
+      padding: '5px 13px',      // ← tamanho vertical / horizontal
+      fontSize: '0.80rem',      // ← tamanho da fonte
       fontWeight: '600',
       letterSpacing: '0.02em',
       whiteSpace: 'nowrap',

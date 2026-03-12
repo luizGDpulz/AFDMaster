@@ -731,6 +731,19 @@ export default defineComponent({
   margin-bottom: 4px;
 }
 
+.detail-value.text-warning-dark {
+  background-color: rgba(245, 158, 11, 0.08) !important;
+  border-color: rgba(245, 158, 11, 0.2) !important;
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+
+[data-theme="dark"] .detail-value.text-warning-dark {
+  background-color: rgba(251, 191, 36, 0.10) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(251, 191, 36, 0.25) !important;
+}
+
 /* ── Fuso chip ── */
 .fuso-chip {
   display: inline-block;

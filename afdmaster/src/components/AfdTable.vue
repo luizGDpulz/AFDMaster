@@ -529,15 +529,35 @@ export default defineComponent({
 
     /**
      * Copia texto puro (digitos) para a área de transferência.
+     * Usa Clipboard API quando disponível (HTTPS/localhost); fallback para
+     * execCommand em contextos HTTP não seguros (ex: servidor local sem TLS).
      */
     const copyToClipboard = (raw) => {
       if (!raw) return
       const digits = raw.replace(/\D/g, '').replace(/^0+/, '') // remove leading zeros do PIS/CPF
-      navigator.clipboard?.writeText(digits).then(() => {
-        $q.notify({ type: 'positive', message: 'Copiado!', timeout: 800, position: 'bottom-right' })
-      }).catch(() => {
-        $q.notify({ type: 'warning', message: 'Não foi possível copiar', timeout: 1200 })
-      })
+
+      const onSuccess = () => $q.notify({ type: 'positive', message: 'Copiado!', timeout: 800, position: 'bottom-right' })
+      const onFail    = () => $q.notify({ type: 'warning', message: 'Não foi possível copiar', timeout: 1200 })
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(digits).then(onSuccess).catch(onFail)
+      } else {
+        // Fallback: cria textarea temporária, seleciona e executa copy
+        try {
+          const ta = document.createElement('textarea')
+          ta.value = digits
+          ta.style.position = 'fixed'
+          ta.style.opacity = '0'
+          document.body.appendChild(ta)
+          ta.focus()
+          ta.select()
+          const ok = document.execCommand('copy')
+          document.body.removeChild(ta)
+          ok ? onSuccess() : onFail()
+        } catch {
+          onFail()
+        }
+      }
     }
 
     // ── Tipo 5 helpers ───────────────────────────────────────────────────────

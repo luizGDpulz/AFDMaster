@@ -144,7 +144,7 @@ export default defineComponent({
           icon: 'folder_open',
           color: 'primary',
           files: [
-             { id: 'md_671', title: 'Manual AFD 671', filename: 'ManualAFD671.md', pdfUrl: '/docs/pdf/layout_afd_671.pdf', icon: 'article', htmlContent: '', loading: false, error: false },
+             { id: 'md_671', title: 'Manual AFD 671', filename: 'ManualAFD671.md', pdfUrl: './docs/pdf/layout_afd_671.pdf', icon: 'article', htmlContent: '', loading: false, error: false },
              { id: 'md_tipos', title: 'Tipos de REP (671)', filename: 'TiposAFD671.md', icon: 'account_tree', htmlContent: '', loading: false, error: false },
              { id: 'md_crc', title: 'Cálculo CRC', filename: 'CalculoDoCRC.md', icon: 'calculate', htmlContent: '', loading: false, error: false }
           ]
@@ -216,7 +216,7 @@ export default defineComponent({
        // Fetch do conteudo sob demanda (lazy load)
        if (!file.htmlContent && !file.error) {
           file.loading = true
-          const docsBaseUrl = '/docs/'
+          const docsBaseUrl = './docs/'
           try {
              const res = await fetch(`${docsBaseUrl}${file.filename}?t=${Date.now()}`)
              if (!res.ok) throw new Error('Not found')

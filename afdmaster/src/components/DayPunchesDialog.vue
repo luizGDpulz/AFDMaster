@@ -29,20 +29,25 @@
       </q-card-section>
       <q-separator class="q-mt-sm" />
       
-      <q-card-section class="q-pa-md bg-grey-1" style="max-height: 60vh; overflow-y: auto;">
-         <q-list separator class="rounded-borders shadow-1 bg-surface">
-            <q-item v-for="(punch, idx) in punches" :key="idx" clickable v-ripple>
+      <q-card-section class="q-pa-md punches-body" style="max-height: 60vh; overflow-y: auto;">
+         <q-list separator class="rounded-borders shadow-1 punches-list">
+            <q-item v-for="(punch, idx) in punches" :key="idx" clickable v-ripple class="punches-item">
                <q-item-section avatar style="min-width: 100px; padding-right: 16px;">
-                  <q-chip :color="punch.ordemPar && punch.ordemPar.startsWith('Entrada') ? 'green-2' : 'orange-2'" text-color="black" size="sm" class="text-weight-bold shadow-1" style="width: 85px; justify-content: center; margin: 0;">
+                  <q-chip
+                    :class="punch.ordemPar && punch.ordemPar.startsWith('Entrada') ? 'chip-entrada' : 'chip-saida'"
+                    size="sm"
+                    class="text-weight-bold shadow-1"
+                    style="width: 85px; justify-content: center; margin: 0;"
+                  >
                      {{ punch.ordemPar || '?' }}
                   </q-chip>
                </q-item-section>
                <q-item-section>
-                  <q-item-label class="text-weight-bold text-mono">{{ punch.dataHora ? punch.dataHora.substring(11, 16) : '—' }}</q-item-label>
-                  <q-item-label caption>{{ formatDate(punch.dataHora ? punch.dataHora.substring(0, 10) : '') }} <span v-if="punch.fusoHorario">GMT{{ punch.fusoHorario }}</span></q-item-label>
+                  <q-item-label class="text-weight-bold text-mono punch-time">{{ punch.dataHora ? punch.dataHora.substring(11, 16) : '—' }}</q-item-label>
+                  <q-item-label caption class="punch-caption">{{ formatDate(punch.dataHora ? punch.dataHora.substring(0, 10) : '') }} <span v-if="punch.fusoHorario">GMT{{ punch.fusoHorario }}</span></q-item-label>
                </q-item-section>
                <q-item-section side>
-                  <q-badge color="grey-3" text-color="grey-8">NSR: {{ punch.nsr }}</q-badge>
+                  <span class="nsr-badge">NSR: {{ punch.nsr }}</span>
                </q-item-section>
             </q-item>
          </q-list>
@@ -77,5 +82,71 @@ export default defineComponent({
 <style scoped>
 .text-mono {
   font-family: 'Roboto Mono', 'Courier New', monospace;
+}
+
+/* ── Corpo da lista ── */
+.punches-body {
+  background-color: var(--qm-bg-secondary);
+}
+
+.punches-list {
+  background-color: var(--qm-surface);
+  border: 1px solid var(--qm-border);
+}
+
+.punches-item {
+  color: var(--qm-text-primary);
+}
+
+.punches-item:hover {
+  background-color: var(--qm-bg-tertiary);
+}
+
+/* ── Hora ── */
+.punch-time {
+  color: var(--qm-text-primary);
+}
+
+.punch-caption {
+  color: var(--qm-text-secondary) !important;
+}
+
+/* ── Chips Entrada / Saída ── */
+.chip-entrada {
+  background-color: rgba(34, 197, 94, 0.15) !important;
+  color: #16a34a !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+}
+
+.chip-saida {
+  background-color: rgba(249, 115, 22, 0.15) !important;
+  color: #ea580c !important;
+  border: 1px solid rgba(249, 115, 22, 0.3) !important;
+}
+
+[data-theme="dark"] .chip-entrada {
+  background-color: rgba(34, 197, 94, 0.18) !important;
+  color: #4ade80 !important;
+  border-color: rgba(34, 197, 94, 0.35) !important;
+}
+
+[data-theme="dark"] .chip-saida {
+  background-color: rgba(249, 115, 22, 0.18) !important;
+  color: #fb923c !important;
+  border-color: rgba(249, 115, 22, 0.35) !important;
+}
+
+/* ── Badge NSR ── */
+.nsr-badge {
+  display: inline-block;
+  background-color: var(--qm-bg-tertiary);
+  color: var(--qm-text-secondary);
+  border: 1px solid var(--qm-border);
+  border-radius: 24px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
+  padding: 3px 10px;
+  white-space: nowrap;
 }
 </style>

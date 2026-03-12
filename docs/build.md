@@ -37,7 +37,37 @@ Como o AFDMaster roda **100% Client-Side** (sem backend NodeJS/PHP), o deploy é
 
 Basta copiar o conteúdo integral da pasta `dist/spa` e colar no diretório público do seu servidor web.
 - **NGINX:** Copie para `/var/www/html/` (Lembre-se de configurar o fallback para `index.html` em caso de navegação no History Mode).
-- **GitHub Pages / Vercel:** Basta apontar o diretório de saída automático para `afdmaster/dist/spa`. 
+- **GitHub Pages / Vercel:** Basta apontar o diretório de saída automático para `afdmaster/dist/spa`.
+- **Docker:** Consulte o guia [docker.md](docker.md) para instruções completas.
 
 > [!NOTE] 
 > O AFDMaster é estático e local. Hospedagem via protocolo `file://` (duplo clique direto no `.html`) pode causar bloqueios de CORS por conta dos módulos ES. Hospede em um servidor HTTP leve para rodar adequadamente.
+
+## 5. Deploy em Subpasta (Subpath)
+
+Por padrão, o `publicPath` em `quasar.config.js` está definido como `'/'`, o que significa que a aplicação espera ser servida na **raiz** do domínio (ex.: `http://localhost/`).
+
+Se você precisa hospedar o AFDMaster dentro de uma **subpasta** — por exemplo, `http://localhost/afdmaster/` no XAMPP — é necessário alterar o `publicPath` antes de fazer o build.
+
+Abra o arquivo `afdmaster/quasar.config.js` e altere a linha:
+
+```js
+publicPath: '/',
+```
+
+Para o caminho da subpasta desejada (sempre com barra no início e no final):
+
+```js
+publicPath: '/afdmaster/',
+```
+
+Em seguida, execute o build normalmente:
+
+```bash
+npm run build
+```
+
+Copie o conteúdo de `dist/spa` para a subpasta correspondente no servidor web (ex.: `htdocs/afdmaster/`).
+
+> [!IMPORTANT]
+> Lembre-se de **reverter** o `publicPath` para `'/'` caso vá fazer um build para o ambiente Docker ou para a raiz de um domínio. Caso contrário, os assets não serão encontrados e a aplicação exibirá uma tela em branco.

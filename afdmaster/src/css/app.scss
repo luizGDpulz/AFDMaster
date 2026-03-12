@@ -239,6 +239,11 @@ body {
     color: #f59e0b !important;
 }
 
+// Override Quasar's text-warning-dark for dark mode (too dim against dark surfaces)
+[data-theme="dark"] .text-warning-dark {
+    color: #fbbf24 !important; // amber-400 — bright enough for dark backgrounds
+}
+
 .text-info {
     color: #3b82f6 !important;
 }
