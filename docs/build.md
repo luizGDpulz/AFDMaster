@@ -71,3 +71,70 @@ Copie o conteúdo de `dist/spa` para a subpasta correspondente no servidor web (
 
 > [!IMPORTANT]
 > Lembre-se de **reverter** o `publicPath` para `'/'` caso vá fazer um build para o ambiente Docker ou para a raiz de um domínio. Caso contrário, os assets não serão encontrados e a aplicação exibirá uma tela em branco.
+
+## 6. Modo Demo (Demo Mode)
+
+O AFDMaster pode ser compilado em **modo demonstração**, pensado para hospedagem pública (portfólio, testes, etc.) sem gerar tráfego real de uso no servidor.
+
+### O que muda no modo demo
+
+| Funcionalidade | Normal | Demo |
+|---|---|---|
+| Importar AFD | Qualquer arquivo `.txt` | Apenas os arquivos de exemplo em `public/examples/` |
+| Gerar AFD | Ilimitado | 1 funcionário, documento pré-definido, máximo 1 dia |
+| Aviso visual | Nenhum | Faixa laranja no topo + badge na sidebar |
+| Sobre | Normal | Explica que é um ambiente de demonstração |
+
+### Como ativar
+
+**Desenvolvimento local (quasar dev):**
+
+```powershell
+# PowerShell (Windows)
+$env:DEMO_MODE="true"; quasar dev
+```
+```bash
+# bash/Linux/macOS
+DEMO_MODE=true quasar dev
+```
+
+**Build estático (XAMPP, nginx local):**
+
+```powershell
+# PowerShell (Windows)
+$env:DEMO_MODE="true"; quasar build
+```
+```bash
+# bash/Linux/macOS
+DEMO_MODE=true quasar build
+```
+
+Sirva a pasta `dist/spa/` normalmente no XAMPP ou no seu servidor.
+
+**Docker (via deploy.sh):**
+
+```bash
+./docker/deploy.sh 3500
+# O script perguntará interativamente: "Ativar MODO DEMO? [s/N]"
+```
+
+Ou passando diretamente o `--build-arg`:
+
+```bash
+docker build --build-arg DEMO_MODE=true -t afdmaster .
+```
+
+> [!NOTE]  
+> A variável é embutida em **tempo de build** pelo Vite. Não é possível alterar o modo sem recompilar a aplicação.
+
+### Arquivos de exemplo
+
+Os arquivos servidos no modo demo estão em `afdmaster/public/examples/`:
+
+```
+afdmaster/public/examples/
+  exemplo_671.txt   ← Portaria 671
+  exemplo_1510.txt  ← Portaria 1510
+```
+
+Popule esses arquivos com dados de demonstração antes de fazer o build. Eles serão copiados automaticamente para `dist/spa/examples/` pelo Quasar.

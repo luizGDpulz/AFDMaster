@@ -34,6 +34,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ---------------------------------------------------------------------------
+# Prompt: Demo Mode
+# ---------------------------------------------------------------------------
+DEMO_BUILD_ARG="--build-arg DEMO_MODE=false"
+# `read` can return exit code 1 on EOF (non-interactive pipe); `|| true` keeps set -e happy
+read -rp "==> Ativar MODO DEMO? (exibe aviso, só permite arquivos de exemplo) [s/N] " _demo_ans || true
+if [[ "${_demo_ans,,}" == "s" || "${_demo_ans,,}" == "y" ]]; then
+  DEMO_BUILD_ARG="--build-arg DEMO_MODE=true"
+  echo "    Demo Mode: ATIVADO"
+else
+  echo "    Demo Mode: desativado"
+fi
+
+# ---------------------------------------------------------------------------
 # Build
 # ---------------------------------------------------------------------------
 echo ""
@@ -44,6 +57,7 @@ echo ""
 docker build \
   --file "${REPO_ROOT}/docker/Dockerfile" \
   --tag  "${IMAGE_NAME}:latest" \
+  ${DEMO_BUILD_ARG} \
   "${REPO_ROOT}"
 
 # ---------------------------------------------------------------------------
