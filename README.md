@@ -54,3 +54,13 @@ As instruções detalhadas de como preparar o seu ambiente, instalar as dependê
 
 ## 💼 Contribuições e Guias
 Verifique o arquivo [PROPOSE.md](./docs/PROPOSE.md) para entender a fundo todos os módulos (Visualizador, Motor de Validação Sintático, Sintetizador Mock de testes, e Editor Avançado).
+
+## 🛡️ Licença
+
+Este projeto está licenciado sob a [GNU General Public License v3.0 ou posterior](./LICENSE) (GPL-3.0-or-later).
+
+Em resumo (não substitui o texto legal):
+- Você pode usar, estudar, modificar e redistribuir o código, inclusive de forma comercial, desde que mantenha a mesma licença (copyleft).
+- Distribuições (código-fonte ou binários) devem incluir o aviso de copyright e uma cópia da GPL.
+- Modificações e obras derivadas também precisam ser licenciadas sob GPL-3.0-or-later, com código-fonte disponível a quem receber o binário.
+- Não há garantias: o software é fornecido “no estado em que se encontra”, sem responsabilidade por danos.

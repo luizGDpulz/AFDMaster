@@ -4,6 +4,7 @@
   "description": "Ferramenta robusta para AFD",
   "productName": "Afd Master",
   "author": "Luiz Gustavo Dias Pulz <luizgustavodiaspulz@gmail.com>",
+  "license": "GPL-3.0-or-later",
   "type": "module",
   "private": true,
   "scripts": {
