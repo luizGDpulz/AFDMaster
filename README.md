@@ -44,11 +44,21 @@ A arquitetura do AFDMaster prioriza a **segurança fiscal**, a **performance** e
 
 ---
 
-## 🚀 Como Executar Localmente e Publicar (Build)
+## 🚀 Como Executar e Publicar (Build)
 
 As instruções detalhadas de como preparar o seu ambiente, instalar as dependências de roteamento e como compilar os arquivos estáticos para o seu servidor web estão na nossa área de documentação focada ao desenvolvedor.
 
+### 🔧 Deploy Padrão (Build Local)
+
+No fluxo padrão, você instala as dependências no seu ambiente local, executa o build do projeto e publica os arquivos estáticos gerados em um servidor web (como Nginx, Apache ou similar).
+
 👉 **[Acessar o Manual de Build do App e Uso Local](./docs/build.md)**
+
+### 🐳 Deploy com Docker
+
+No fluxo com Docker, a aplicação é empacotada em uma imagem com ambiente padronizado e executada em contêiner, reduzindo diferenças entre máquinas e simplificando a publicação.
+
+👉 **[Acessar o Guia de Deploy com Docker](./docs/docker.md)**
 
 ---
 

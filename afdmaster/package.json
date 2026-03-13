@@ -2,7 +2,7 @@
   "name": "afdmaster",
   "version": "0.0.1",
   "description": "Ferramenta robusta para AFD",
-  "productName": "Afd Master",
+  "productName": "AFDMaster",
   "author": "Luiz Gustavo Dias Pulz <luizgustavodiaspulz@gmail.com>",
   "license": "GPL-3.0-or-later",
   "type": "module",

@@ -46,7 +46,13 @@ export default defineConfig((/* ctx */) => {
 
       publicPath: '/',
       // analyze: true,
-      // env: {},
+      // Para ativar o modo demo: defina a variável DEMO_MODE=true antes do build.
+      //   Docker  : --build-arg DEMO_MODE=true
+      //   Local   : $env:DEMO_MODE="true"; quasar build   (PowerShell)
+      //             DEMO_MODE=true quasar build            (bash/Linux)
+      env: {
+        DEMO_MODE: process.env.DEMO_MODE === 'true' ? 'true' : 'false',
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,

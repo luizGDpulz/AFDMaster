@@ -7,6 +7,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Declare build-time argument (default: normal mode)
+# To build in demo mode:  docker build --build-arg DEMO_MODE=true ...
+ARG DEMO_MODE=false
+ENV DEMO_MODE=$DEMO_MODE
+
 # Copy manifest + quasar config first so dependency layers are cached.
 # quasar.config.js and index.html are required by the `quasar prepare` postinstall script.
 COPY afdmaster/package.json afdmaster/package-lock.json afdmaster/quasar.config.js afdmaster/index.html ./
@@ -17,7 +22,7 @@ RUN npm ci
 # Copy the rest of the source
 COPY afdmaster/ .
 
-# Build the SPA
+# Build the SPA (DEMO_MODE is already set in ENV above)
 RUN npm run build
 
 # ---------------------------------------------------------------------------

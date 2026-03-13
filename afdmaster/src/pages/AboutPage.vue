@@ -29,6 +29,60 @@
           Ferramenta avançada para validação e manutenção de Arquivos Fonte de Dados (AFD).
        </div>
 
+       <!-- Card Demo Mode (só aparece quando compilado com DEMO_MODE=true) -->
+       <q-card v-if="isDemo" class="soft-card q-mb-lg demo-about-card text-left">
+          <q-card-section class="row items-center no-wrap q-pb-xs">
+            <q-icon name="science" size="28px" color="orange" class="q-mr-sm" />
+            <div class="text-h6 text-weight-bold" style="color:#e65100">Ambiente de Demonstração</div>
+          </q-card-section>
+          <q-card-section class="q-pt-xs">
+            <p class="text-body2 text-grey-8 q-mb-sm">
+              Você está acessando uma instância pública do AFDMaster compilada em <strong>modo demo</strong>, 
+              hospedada como projeto de portfólio. Por isso, algumas funcionalidades estão intencionalmente 
+              limitadas para não gerar tráfego desnecessário no servidor.
+            </p>
+            <q-list dense class="q-mb-sm">
+              <q-item dense class="q-pa-none">
+                <q-item-section avatar style="min-width:28px">
+                  <q-icon name="block" color="negative" size="16px" />
+                </q-item-section>
+                <q-item-section class="text-caption text-grey-7">
+                  Importão livre desabilitada — apenas arquivos de exemplo pré-carregados
+                </q-item-section>
+              </q-item>
+              <q-item dense class="q-pa-none">
+                <q-item-section avatar style="min-width:28px">
+                  <q-icon name="block" color="negative" size="16px" />
+                </q-item-section>
+                <q-item-section class="text-caption text-grey-7">
+                  Gerador limitado a 1 funcionário, 1 dia e documento fixo
+                </q-item-section>
+              </q-item>
+              <q-item dense class="q-pa-none">
+                <q-item-section avatar style="min-width:28px">
+                  <q-icon name="check_circle" color="positive" size="16px" />
+                </q-item-section>
+                <q-item-section class="text-caption text-grey-7">
+                  Análise, validação e documentação funcionam normalmente
+                </q-item-section>
+              </q-item>
+            </q-list>
+            <p class="text-caption text-grey-6 q-mb-xs">
+              Quer usar sem limitações? O projeto é open-source — faça seu próprio deploy a partir do repositório.
+            </p>
+            <q-btn
+              flat
+              dense
+              color="primary"
+              icon="code"
+              label="Repositório no GitHub"
+              href="https://github.com/luizGDpulz/AFDMaster"
+              target="_blank"
+              size="sm"
+            />
+          </q-card-section>
+       </q-card>
+
        <q-card class="soft-card q-mb-xl text-center">
           <q-card-section>
              <div class="text-h6 q-mb-md">Sobre o Desenvolvedor</div>
@@ -81,11 +135,13 @@
 import { defineComponent } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 
+const IS_DEMO = process.env.DEMO_MODE === 'true'
+
 export default defineComponent({
   name: 'AboutPage',
   setup() {
     const store = useAfdStore()
-    return { store }
+    return { store, isDemo: IS_DEMO }
   }
 })
 </script>
@@ -95,5 +151,10 @@ export default defineComponent({
    max-width: 600px;
    width: 100%;
    margin-top: -5vh; /* Levanta um pouco em relacao ao centro cirurgico */
+}
+
+.demo-about-card {
+  border: 1px solid rgba(245, 127, 23, 0.35) !important;
+  background: rgba(245, 127, 23, 0.05) !important;
 }
 </style>

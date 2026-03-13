@@ -103,7 +103,7 @@
                  <div class="col-12 col-md-5">
                     <q-card class="soft-card" flat bordered>
                        <q-card-section>
-                          <div class="text-subtitle2 q-mb-sm text-warning-dark">Intervalo de NSR</div>
+                          <div class="text-subtitle2 q-mb-sm text-primary">Intervalo de NSR</div>
                           <div class="row q-col-gutter-sm">
                              <div class="col-6">
                                 <q-input dense outlined v-model.number="exportFilters.nsrStart" type="number" label="NSR Mínimo" class="soft-input" />
@@ -149,10 +149,94 @@
     </q-dialog>
 
   </q-page>
+
+  <!-- Modal de boas-vindas do modo demo (aparece a cada carregamento/recarga) -->
+  <q-dialog v-if="isDemo" v-model="demoWelcome" persistent>
+    <q-card class="demo-welcome-card soft-card" style="max-width:480px; width:100%; border-radius:20px;">
+
+      <!-- Header laranja -->
+      <div class="demo-welcome-header row items-center no-wrap q-pa-lg q-pb-md">
+        <q-icon name="science" size="40px" color="white" class="q-mr-md" />
+        <div>
+          <div class="text-h6 text-white text-weight-bold">Modo Demonstração</div>
+          <div class="text-caption" style="color:rgba(255,255,255,0.8);">Instância pública de portfólio</div>
+        </div>
+      </div>
+
+      <q-card-section class="q-pt-md q-pb-xs">
+        <p class="text-body2 text-grey-8 q-mb-md">
+          Você está acessando o <strong>AFDMaster</strong> em modo demonstração.
+          Algumas funcionalidades são limitadas para preservar os recursos do servidor.
+        </p>
+
+        <q-list dense class="q-mb-md">
+          <q-item dense class="q-pa-none q-mb-xs">
+            <q-item-section avatar style="min-width:30px">
+              <q-icon name="lock" color="orange-8" size="18px"/>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-caption text-grey-8">
+                Importão livre desabilitada — use os <strong>arquivos de exemplo</strong> disponíveis
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item dense class="q-pa-none q-mb-xs">
+            <q-item-section avatar style="min-width:30px">
+              <q-icon name="lock" color="orange-8" size="18px"/>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-caption text-grey-8">
+                Gerador limitado a <strong>1 funcionário</strong>, 1 dia e CPF fixo
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item dense class="q-pa-none">
+            <q-item-section avatar style="min-width:30px">
+              <q-icon name="check_circle" color="positive" size="18px"/>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-caption text-grey-8">
+                Análise, validação, documentação e configurações funcionam normalmente
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+
+        <q-banner dense rounded class="bg-blue-1 text-blue-9 text-caption q-mb-md">
+          <template v-slot:avatar>
+            <q-icon name="tips_and_updates" color="blue-7" size="18px"/>
+          </template>
+          Quer usar sem limitações? O projeto é open-source sob a licença GPL-3.0-SA —
+          <a href="https://github.com/luizGDpulz/AFDMaster" target="_blank" class="text-blue-9 text-decoration-none" >Faça seu próprio Deploy aqui</a>.
+        </q-banner>
+      </q-card-section>
+
+      <q-card-actions align="right" class="q-px-lg q-pb-lg q-pt-xs">
+        <q-btn
+          unelevated
+          color="orange-8"
+          label="Sobre"
+          icon="info"
+          class="soft-btn text-weight-bold"
+          @click="aboutpage"
+        />
+        <q-btn
+          unelevated
+          color="orange-8"
+          label="Entendido, continuar"
+          icon="arrow_forward"
+          class="soft-btn text-weight-bold"
+          v-close-popup
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
 </template>
 
 <script>
 import { defineComponent, ref, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useQuasar } from 'quasar'
 import { useGenerator } from 'src/composables/useGenerator'
@@ -166,7 +250,10 @@ export default defineComponent({
   components: { UploadAFD, AfdTable, ValidationReport, AfdAdvancedEditor },
   setup() {
     const store = useAfdStore()
+    const router = useRouter()
     const tab = ref('records')
+    const demoWelcome = ref(false)
+    const isDemo = process.env.DEMO_MODE === 'true'
     
     // Mapeamento para o Breadcrumb do Layout
     const tabLabels = { records: 'Registros', validation: 'Validações', export: 'Exportar', editor: 'Edição' }
@@ -177,6 +264,10 @@ export default defineComponent({
     const uploadModal = ref(false)
     const $q = useQuasar()
     const { generateFileContent } = useGenerator()
+
+    const aboutpage = () => {
+       router.push('/about')
+    }
 
     const handleFilterError = (errorMsg) => {
        store.setFilters({
@@ -295,6 +386,7 @@ export default defineComponent({
     onMounted(() => {
       document.documentElement.style.overflow = 'hidden'
       document.body.style.overflow = 'hidden'
+      if (isDemo) demoWelcome.value = true
     })
 
     onUnmounted(() => {
@@ -311,7 +403,10 @@ export default defineComponent({
       downloadFile,
       handleFilterError,
       handleFilterWarning,
-      exportFilters
+      exportFilters,
+      demoWelcome,
+      isDemo,
+      aboutpage
     }
   }
 })
@@ -333,5 +428,10 @@ export default defineComponent({
    flex-wrap: nowrap;
    overflow-y: auto;
    overflow-x: hidden;
+}
+
+.demo-welcome-header {
+  background: linear-gradient(135deg, #e65100, #f57f17);
+  border-radius: 20px 20px 0 0;
 }
 </style>

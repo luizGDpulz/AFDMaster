@@ -56,6 +56,17 @@
 
     <!-- Footer Settings & Theme -->
     <div class="sidebar-footer">
+
+      <!-- Badge Demo Mode -->
+      <div v-if="isDemo" class="demo-mode-badge">
+        <q-icon name="science" size="16px" class="q-mr-xs" />
+        <span>Modo Demonstração</span>
+        <q-tooltip anchor="top middle" self="bottom middle" :offset="[0, 6]">
+          Esta instância foi compilada em modo demo.<br>
+          Funcionalidades são limitadas para proteger o servidor.
+        </q-tooltip>
+      </div>
+
       <!-- Toggle Tema -->
       <button class="theme-toggle-btn" @click="$emit('toggle-theme')">
         <q-icon :name="isDark ? 'light_mode' : 'dark_mode'" size="18px" />
@@ -69,6 +80,8 @@
 <script>
 import { defineComponent } from 'vue'
 import { useRoute } from 'vue-router'
+
+const IS_DEMO = process.env.DEMO_MODE === 'true'
 
 export default defineComponent({
   name: 'AppSidebar',
@@ -102,7 +115,8 @@ export default defineComponent({
 
     return {
       menuItems,
-      isActive
+      isActive,
+      isDemo: IS_DEMO
     }
   }
 })
@@ -221,5 +235,23 @@ export default defineComponent({
   &:hover {
     box-shadow: var(--qm-shadow);
   }
+}
+
+// ===== DEMO MODE BADGE =====
+.demo-mode-badge {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(245, 127, 23, 0.15);
+  border: 1px solid rgba(245, 127, 23, 0.4);
+  color: #e65100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: default;
+  letter-spacing: 0.2px;
 }
 </style>

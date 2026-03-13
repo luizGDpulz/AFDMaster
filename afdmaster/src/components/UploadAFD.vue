@@ -18,6 +18,44 @@
 
 <template>
   <div class="upload-container text-center q-pa-lg">
+
+    <!-- =========================================================
+         MODO DEMO: só arquivos de exemplo
+         ========================================================= -->
+    <template v-if="isDemoMode">
+      <div class="soft-card q-pa-lg full-width">
+        <q-icon name="science" size="48px" color="orange" />
+        <div class="text-subtitle1 text-weight-medium q-mt-sm q-mb-xs">Modo Demonstração</div>
+        <div class="text-caption text-grey-6 q-mb-lg">
+          Neste ambiente apenas os arquivos de exemplo abaixo podem ser carregados.
+        </div>
+        <div class="row q-gutter-md justify-center">
+          <q-btn
+            icon="description"
+            label="Exemplo Portaria 671"
+            color="primary"
+            unelevated
+            class="soft-btn"
+            :loading="loadingDemo === '671'"
+            @click="loadDemoFile('671')"
+          />
+          <q-btn
+            icon="description"
+            label="Exemplo Portaria 1510"
+            color="primary"
+            unelevated
+            class="soft-btn"
+            :loading="loadingDemo === '1510'"
+            @click="loadDemoFile('1510')"
+          />
+        </div>
+      </div>
+    </template>
+
+    <!-- =========================================================
+         MODO NORMAL: picker / drag-and-drop
+         ========================================================= -->
+    <template v-else>
     <div 
       class="upload-area full-width soft-card q-pa-xl cursor-pointer"
       :class="{ 'dragging': isDragging }"
@@ -70,6 +108,8 @@
            :disable="isFinished"
        />
     </div>
+    </template>
+
   </div>
 </template>
 
@@ -81,6 +121,8 @@ import { useParser1510 } from 'src/composables/useParser1510'
 import { useParser671 } from 'src/composables/useParser671'
 import { useValidators } from 'src/composables/useValidators'
 import { detectAfdFormat } from 'src/utils/afdDetector'
+
+const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
 export default defineComponent({
   name: 'UploadAFD',
@@ -98,6 +140,8 @@ export default defineComponent({
     const isDragging = ref(false)
     const selectedFile = ref(null)
     const fileInputRef = ref(null)
+    const isDemoMode = ref(DEMO_MODE)
+    const loadingDemo = ref(null)
 
     const triggerFileInput = () => {
        if (fileInputRef.value) {
@@ -141,6 +185,29 @@ export default defineComponent({
         selectedFile.value = null
         isFinished.value = false
         if (fileInputRef.value) fileInputRef.value.value = ''
+    }
+
+    // -----------------------------------------------------------------
+    // Demo mode: fetch example file from /examples/ and parse it
+    // -----------------------------------------------------------------
+    const loadDemoFile = async (type) => {
+      const url = type === '671'
+        ? '/examples/exemplo_671.txt'
+        : '/examples/exemplo_1510.txt'
+      const fileName = type === '671' ? 'exemplo_671.txt' : 'exemplo_1510.txt'
+
+      loadingDemo.value = type
+      emit('file-processing')
+      try {
+        const response = await fetch(url)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const content = await response.text()
+        parseContent(content, fileName)
+      } catch (err) {
+        $q.notify({ type: 'negative', message: 'Erro ao carregar arquivo de exemplo: ' + err.message })
+      } finally {
+        loadingDemo.value = null
+      }
     }
 
     const parseContent = (content, fileName) => {
@@ -229,6 +296,9 @@ export default defineComponent({
       isDragging,
       selectedFile,
       fileInputRef,
+      isDemoMode,
+      loadingDemo,
+      loadDemoFile,
       triggerFileInput,
       onFileSelected,
       onDragOver,

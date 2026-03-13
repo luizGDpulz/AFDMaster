@@ -43,7 +43,7 @@
           </q-card>
         </div>
         <div class="col-12 col-md-3">
-          <q-card class="soft-card bg-info text-white">
+          <q-card class="soft-card bg-orange-10 text-white">
             <q-card-section>
               <div class="text-overline uppercase">Registros Alterados</div>
               <div class="text-h3">{{ store.validationSummary.totalAlterados }}</div>
@@ -51,7 +51,7 @@
           </q-card>
         </div>
         <div class="col-12 col-md-3">
-          <q-card class="soft-card bg-primary text-white">
+          <q-card class="soft-card bg-blue-10 text-white">
             <q-card-section>
               <div class="text-overline uppercase">Total Processado</div>
               <div class="text-h3">{{ store.records.length }}</div>
