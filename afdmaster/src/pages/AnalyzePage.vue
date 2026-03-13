@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   Copyright (C) 2026 Luiz Gustavo Dias Pulz
   SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -82,7 +82,43 @@
           <!-- Aba Exportar -->
           <q-tab-panel name="export">
             <div class="q-pa-md">
-              <div class="text-h6 q-mb-md text-center">Filtros de Exportação do AFD</div>
+              <div class="text-h6 q-mb-md text-center">Exportação de Dados</div>
+
+              <div class="row justify-center q-mb-lg">
+                <q-btn-toggle
+                  v-model="exportType"
+                  spread
+                  unelevated
+                  toggle-color="primary"
+                  color="grey-2"
+                  text-color="grey-7"
+                  :options="[
+                    { label: 'Arquivo AFD (Original/Editado)', value: 'afd', icon: 'description' },
+                    { label: 'Arquivo de Batidas (Personalizado)', value: 'batidas', icon: 'list' }
+                  ]"
+                  class="soft-btn-toggle"
+                  style="max-width: 600px; width: 100%;"
+                />
+              </div>
+
+              <!-- AFD Export Section -->
+              <div v-if="exportType === 'afd'">
+                <!-- Password Warning for AFD if set -->
+                <div v-if="hasPassword && !isUnlocked" class="text-center q-pa-lg">
+                   <q-icon name="lock" size="64px" color="grey-4" />
+                   <div class="text-h6 text-grey-6 q-mt-md">Exportação AFD protegida por senha</div>
+                   <q-btn
+                     unelevated
+                     color="primary"
+                     label="Desbloquear para Exportar"
+                     icon="lock_open"
+                     class="q-mt-md soft-btn soft-btn-primary"
+                     @click="promptPassword"
+                   />
+                </div>
+
+                <div v-else>
+                  <div class="text-subtitle1 q-mb-md text-center">Filtros de Exportação do AFD</div>
               
               <div class="row q-col-gutter-md q-mb-md justify-center">
                  <div class="col-12 col-md-5">
@@ -117,17 +153,143 @@
                  </div>
               </div>
 
-              <div class="text-center">
-                 <q-btn
-                    color="primary"
-                    icon="save_alt"
-                    label="Baixar Arquivo AFD Editado"
-                    size="lg"
-                    unelevated
-                    class="soft-btn soft-btn-primary q-mt-md"
-                    @click="downloadFile"
-                 />
+                  <div class="text-center">
+                     <q-btn
+                        color="primary"
+                        icon="save_alt"
+                        label="Baixar Arquivo AFD Editado"
+                        size="lg"
+                        unelevated
+                        class="soft-btn soft-btn-primary q-mt-md"
+                        @click="downloadFile"
+                     />
+                  </div>
+                </div>
               </div>
+
+              <!-- Batidas Export Section -->
+              <div v-if="exportType === 'batidas'">
+                <div class="text-subtitle1 q-mb-md text-center">Configuração de Exportação de Batidas</div>
+                
+                <div class="row q-col-gutter-md justify-center">
+                  <div class="col-12 col-md-8">
+                    <q-card class="soft-card" flat bordered>
+                       <q-card-section>
+                          <div class="row q-col-gutter-md">
+                            <!-- Layout e Delimitador -->
+                            <div class="col-12 col-sm-6">
+                               <div class="text-caption text-weight-bold q-mb-xs">Tipo de Layout</div>
+                               <q-select
+                                 outlined dense
+                                 v-model="batidasConfig.layout"
+                                 :options="[{label: 'Tamanho Fixo', value: 'fixed'}, {label: 'Delimitado', value: 'delimited'}]"
+                                 emit-value map-options
+                                 class="soft-input"
+                               />
+                            </div>
+                            <div class="col-12 col-sm-6" v-if="batidasConfig.layout === 'delimited'">
+                               <div class="text-caption text-weight-bold q-mb-xs">Caractere Delimitador</div>
+                               <q-input
+                                 outlined dense
+                                 v-model="batidasConfig.delimiter"
+                                 maxlength="1"
+                                 placeholder="Ex: ;"
+                                 class="soft-input"
+                               />
+                            </div>
+                          </div>
+
+                          <!-- Tamanhos de Campo (Fixo) -->
+                          <div class="q-mt-md" v-if="batidasConfig.layout === 'fixed'">
+                             <div class="text-caption text-weight-bold q-mb-sm">Tamanhos de Campo</div>
+                             <div class="row q-col-gutter-sm">
+                                <div class="col-4">
+                                   <q-input dense outlined type="number" v-model.number="batidasConfig.fields.cpf" label="CPF/PIS" class="soft-input" />
+                                </div>
+                                <div class="col-4">
+                                   <q-input dense outlined type="number" v-model.number="batidasConfig.fields.date" label="Data" class="soft-input" />
+                                </div>
+                                <div class="col-4">
+                                   <q-input dense outlined type="number" v-model.number="batidasConfig.fields.time" label="Hora" class="soft-input" />
+                                </div>
+                             </div>
+                          </div>
+
+                          <q-separator class="q-my-lg" />
+
+                          <!-- Novos Filtros de Batidas -->
+                          <div class="text-subtitle2 q-mb-md text-primary">Filtros Adicionais</div>
+                          
+                          <div class="row q-col-gutter-md">
+                            <!-- Intervalo de Data -->
+                            <div class="col-12 col-sm-6">
+                              <div class="text-caption text-weight-bold q-mb-xs">Intervalo de Data</div>
+                              <div class="row q-col-gutter-sm">
+                                <div class="col-6">
+                                  <q-input dense outlined v-model="batidasConfig.dateStart" type="date" label="De" class="soft-input" />
+                                </div>
+                                <div class="col-6">
+                                  <q-input dense outlined v-model="batidasConfig.dateEnd" type="date" label="Até" class="soft-input" />
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Intervalo de NSR -->
+                            <div class="col-12 col-sm-6">
+                              <div class="text-caption text-weight-bold q-mb-xs">Intervalo de NSR</div>
+                              <div class="row q-col-gutter-sm">
+                                <div class="col-6">
+                                  <q-input dense outlined v-model.number="batidasConfig.nsrStart" type="number" label="NSR Mín" class="soft-input" />
+                                </div>
+                                <div class="col-6">
+                                  <q-input dense outlined v-model.number="batidasConfig.nsrEnd" type="number" label="NSR Máx" class="soft-input" />
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Filtro de Documento -->
+                            <div class="col-12 col-sm-6">
+                              <div class="text-caption text-weight-bold q-mb-xs">Filtrar por Documento</div>
+                              <q-input 
+                                dense outlined 
+                                v-model="batidasConfig.documento" 
+                                label="CPF ou PIS" 
+                                class="soft-input"
+                                hint="Apenas registros deste colaborador"
+                              />
+                            </div>
+
+                            <!-- Substituição de Documento -->
+                            <div class="col-12 col-sm-6">
+                              <div class="text-caption text-weight-bold q-mb-xs">Substituir por</div>
+                              <q-input 
+                                dense outlined 
+                                v-model="batidasConfig.replaceDocumento" 
+                                label="Novo Valor" 
+                                class="soft-input"
+                                :disable="!batidasConfig.documento"
+                                hint="Muda o valor no arquivo final"
+                              />
+                            </div>
+                          </div>
+                       </q-card-section>
+                    </q-card>
+                  </div>
+                </div>
+
+                <div class="text-center q-mt-lg">
+                   <q-btn
+                     color="secondary"
+                     icon="download"
+                     label="Baixar Arquivo de Batidas"
+                     size="lg"
+                     unelevated
+                     class="soft-btn q-px-xl"
+                     @click="downloadBatidas"
+                   />
+                </div>
+              </div>
+
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -235,7 +397,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, watch, onMounted, onUnmounted } from 'vue'
+import { defineComponent, ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useQuasar } from 'quasar'
@@ -263,7 +425,33 @@ export default defineComponent({
 
     const uploadModal = ref(false)
     const $q = useQuasar()
-    const { generateFileContent } = useGenerator()
+    const { generateFileContent, generateBatidasContent } = useGenerator()
+
+    // ── Proteção Técnica ──────────────────────────────────────────
+    const isUnlocked = ref(false)
+    const hasPassword = computed(() => {
+      return !!process.env.TECH_PASSWORD && process.env.TECH_PASSWORD !== ''
+    })
+
+    const promptPassword = () => {
+      $q.dialog({
+        title: 'Acesso Técnico',
+        message: 'Informe a senha técnica para desbloquear a exportação AFD:',
+        prompt: {
+          model: '',
+          type: 'password'
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(data => {
+        if (data === process.env.TECH_PASSWORD) {
+          isUnlocked.value = true
+          $q.notify({ type: 'positive', message: 'Exportação AFD desbloqueada!' })
+        } else {
+          $q.notify({ type: 'negative', message: 'Senha incorreta.' })
+        }
+      })
+    }
 
     const aboutpage = () => {
        router.push('/about')
@@ -302,6 +490,90 @@ export default defineComponent({
     const onFileProcessed = () => {
       uploadModal.value = false
       tab.value = 'records'
+    }
+
+    const exportType = ref('afd')
+    const batidasConfig = ref({
+       layout: 'delimited',
+       delimiter: ';',
+       fields: { cpf: 11, date: 8, time: 4 },
+       // Filtros
+       dateStart: '',
+       dateEnd: '',
+       nsrStart: null,
+       nsrEnd: null,
+       documento: '',
+       replaceDocumento: ''
+    })
+
+    const downloadBatidas = () => {
+       try {
+          $q.loading.show({ message: 'Preparando exportação de batidas...' })
+          setTimeout(() => {
+             const bc = batidasConfig.value
+             let dataset = store.records.filter(r => r.tipo === '3')
+
+             // Filtro de Data
+             if (bc.dateStart) {
+                const sd = new Date(bc.dateStart + 'T00:00:00').getTime()
+                dataset = dataset.filter(r => r.dataHora && new Date(r.dataHora).getTime() >= sd)
+             }
+             if (bc.dateEnd) {
+                const ed = new Date(bc.dateEnd + 'T23:59:59').getTime()
+                dataset = dataset.filter(r => r.dataHora && new Date(r.dataHora).getTime() <= ed)
+             }
+
+             // Filtro de NSR
+             if (bc.nsrStart !== null && bc.nsrStart !== '') {
+                const ns = Number(bc.nsrStart)
+                dataset = dataset.filter(r => r.nsr && Number(r.nsr) >= ns)
+             }
+             if (bc.nsrEnd !== null && bc.nsrEnd !== '') {
+                const ne = Number(bc.nsrEnd)
+                dataset = dataset.filter(r => r.nsr && Number(r.nsr) <= ne)
+             }
+
+             // Filtro de Documento
+             if (bc.documento) {
+                const filterDoc = bc.documento.replace(/\D/g, '')
+                dataset = dataset.filter(r => {
+                   const recDoc = (r.cpf || r.pis || '').replace(/\D/g, '')
+                   return recDoc.endsWith(filterDoc)
+                })
+
+                // Substituição (opcional, só se tiver filtro de documento)
+                if (bc.replaceDocumento) {
+                   const newVal = bc.replaceDocumento.trim()
+                   dataset = dataset.map(r => ({
+                      ...r,
+                      cpf: newVal,
+                      pis: newVal
+                   }))
+                }
+             }
+
+             if (dataset.length === 0) {
+                $q.loading.hide()
+                return $q.notify({ type: 'warning', message: 'Nenhum registro encontrado com os filtros selecionados.' })
+             }
+
+             const content = generateBatidasContent(dataset, bc)
+             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+             const url = URL.createObjectURL(blob)
+             const link = document.createElement('a')
+             link.href = url
+             link.download = `batidas_export_${Date.now()}.txt`
+             document.body.appendChild(link)
+             link.click()
+             document.body.removeChild(link)
+             URL.revokeObjectURL(url)
+             $q.loading.hide()
+             $q.notify({ type: 'positive', message: 'Arquivo de batidas exportado com sucesso!' })
+          }, 100)
+       } catch (err) {
+          $q.loading.hide()
+          $q.notify({ type: 'negative', message: 'Erro na exportação: ' + err.message })
+       }
     }
 
     const downloadFile = () => {
@@ -403,10 +675,17 @@ export default defineComponent({
       downloadFile,
       handleFilterError,
       handleFilterWarning,
-      exportFilters,
-      demoWelcome,
       isDemo,
-      aboutpage
+      aboutpage,
+      // Export
+      exportType,
+      batidasConfig,
+      downloadBatidas,
+      exportFilters,
+      // Proteção
+      isUnlocked,
+      hasPassword,
+      promptPassword
     }
   }
 })

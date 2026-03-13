@@ -133,7 +133,50 @@ export function useGenerator() {
         return conteudoFinal.join('\r\n') + '\r\n' // CRLF exigido pelas portarias
     }
 
+    /**
+     * Gera conteúdo para exportação de batidas (layout personalizado)
+     * @param {Array} records 
+     * @param {Object} options { layout: 'fixed'|'delimited', delimiter: ';', fields: { cpf: 11, date: 8, time: 4 } }
+     */
+    const generateBatidasContent = (records, options = {}) => {
+        const { layout = 'delimited', delimiter = ';', fields = { cpf: 11, date: 8, time: 4 } } = options
+        
+        let lines = []
+        for (const rec of records) {
+            if (rec.tipo !== '3') continue // Apenas marcações
+
+            let cpfVal = (rec.cpf || rec.pis || '').replace(/\D/g, '')
+            let dtStr = ''
+            let hrStr = ''
+
+            if (rec.dataHora) {
+                const dt = new Date(rec.dataHora)
+                if (!isNaN(dt.getTime())) {
+                    const day = padZeros(dt.getDate(), 2)
+                    const mon = padZeros(dt.getMonth() + 1, 2)
+                    const yyyy = padZeros(dt.getFullYear(), 4)
+                    dtStr = `${day}${mon}${yyyy}`
+                    
+                    const hh = padZeros(dt.getHours(), 2)
+                    const mi = padZeros(dt.getMinutes(), 2)
+                    hrStr = `${hh}${mi}`
+                }
+            }
+
+            if (layout === 'fixed') {
+                const cpfPadded = padZeros(cpfVal, fields.cpf || 11).slice(-(fields.cpf || 11))
+                const dtPadded = padZeros(dtStr, fields.date || 8).slice(-(fields.date || 8))
+                const hrPadded = padZeros(hrStr, fields.time || 4).slice(-(fields.time || 4))
+                lines.push(`${cpfPadded}${dtPadded}${hrPadded}`)
+            } else {
+                lines.push(`${cpfVal}${delimiter}${dtStr}${delimiter}${hrStr}${delimiter}`)
+            }
+        }
+        return lines.join('\r\n') + '\r\n'
+    }
+
     return {
-        generateFileContent
+        generateFileContent,
+        generateBatidasContent
     }
 }

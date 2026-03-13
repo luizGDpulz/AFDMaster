@@ -52,6 +52,7 @@ export default defineConfig((/* ctx */) => {
       //             DEMO_MODE=true quasar build            (bash/Linux)
       env: {
         DEMO_MODE: process.env.DEMO_MODE === 'true' ? 'true' : 'false',
+        TECH_PASSWORD: process.env.TECH_PASSWORD || ''
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

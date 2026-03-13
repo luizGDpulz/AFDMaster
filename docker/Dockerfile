@@ -7,10 +7,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Declare build-time argument (default: normal mode)
-# To build in demo mode:  docker build --build-arg DEMO_MODE=true ...
+# Declare build-time arguments (default: normal mode, no password)
+# To build in demo mode:     docker build --build-arg DEMO_MODE=true ...
+# To set tech password:       docker build --build-arg TECH_PASSWORD=mypass ...
 ARG DEMO_MODE=false
+ARG TECH_PASSWORD=""
+
 ENV DEMO_MODE=$DEMO_MODE
+ENV TECH_PASSWORD=$TECH_PASSWORD
 
 # Copy manifest + quasar config first so dependency layers are cached.
 # quasar.config.js and index.html are required by the `quasar prepare` postinstall script.

@@ -89,6 +89,19 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Prompt: Tech Password
+# ---------------------------------------------------------------------------
+TECH_BUILD_ARG="--build-arg TECH_PASSWORD="
+read -rsp "==> Definir SENHA TÉCNICA (bloqueia funções de edição sensíveis)? [Deixe vazio para sem senha]: " _tech_pass || true
+echo "" # newline after silent read
+if [[ -n "${_tech_pass}" ]]; then
+  TECH_BUILD_ARG="--build-arg TECH_PASSWORD=${_tech_pass}"
+  echo "    Tech Password: DEFINIDA"
+else
+  echo "    Tech Password: Sem senha (acesso livre)"
+fi
+
+# ---------------------------------------------------------------------------
 # Build
 # ---------------------------------------------------------------------------
 echo ""
@@ -100,6 +113,7 @@ docker build \
   --file "${REPO_ROOT}/docker/Dockerfile" \
   --tag  "${IMAGE_NAME}:latest" \
   ${DEMO_BUILD_ARG} \
+  ${TECH_BUILD_ARG} \
   "${REPO_ROOT}"
 
 # ---------------------------------------------------------------------------

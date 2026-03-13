@@ -114,6 +114,9 @@ Para personalizar, edite o `nginx.conf` antes do build da imagem.
 >     build:
 >       context: .
 >       dockerfile: docker/Dockerfile
+>       args:
+>         - DEMO_MODE=false
+>         - TECH_PASSWORD=sua_senha_aqui
 >     ports:
 >       - "8080:80"
 >     restart: unless-stopped

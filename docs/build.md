@@ -85,6 +85,44 @@ O AFDMaster pode ser compilado em **modo demonstração**, pensado para hospedag
 | Aviso visual | Nenhum | Faixa laranja no topo + badge na sidebar |
 | Sobre | Normal | Explica que é um ambiente de demonstração |
 
+### 7. Senha Técnica (Tech Password)
+
+O AFDMaster permite proteger funcionalidades de edição sensíveis (como reindexação de NSR e troca de portaria) através de uma senha técnica definida em tempo de build.
+
+- **Se não definida:** O sistema funciona normalmente com todas as funções desbloqueadas.
+- **Se definida:** As funções sensíveis e a exportação AFD exigirão a senha para serem acessadas.
+
+#### Como ativar
+
+**Desenvolvimento local (quasar dev):**
+
+```powershell
+# PowerShell (Windows)
+$env:TECH_PASSWORD="sua_senha"; quasar dev
+```
+```bash
+# bash/Linux/macOS
+TECH_PASSWORD=sua_senha quasar dev
+```
+
+**Build estático:**
+
+```powershell
+# PowerShell (Windows)
+$env:TECH_PASSWORD="sua_senha"; quasar build
+```
+```bash
+# bash/Linux/macOS
+TECH_PASSWORD=sua_senha quasar build
+```
+
+**Docker (via deploy.sh):**
+
+```bash
+./docker/deploy.sh
+# O script perguntará interativamente: "Definir SENHA TÉCNICA? [...]"
+```
+
 ### Como ativar
 
 **Desenvolvimento local (quasar dev):**

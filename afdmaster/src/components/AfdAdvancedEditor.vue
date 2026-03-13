@@ -37,6 +37,18 @@
       </div>
     </q-banner>
 
+    <div class="row items-center justify-between q-mb-md" v-if="hasPassword && !isUnlocked">
+      <div class="text-subtitle2 text-grey-7">Algumas funcionalidades avançadas estão protegidas.</div>
+      <q-btn
+        flat
+        color="primary"
+        icon="lock_open"
+        label="Opções Técnicas"
+        @click="promptPassword"
+        class="soft-btn"
+      />
+    </div>
+
     <div class="row q-col-gutter-lg">
 
       <!-- ══════════════════════════════════════════════════════════════
@@ -51,81 +63,90 @@
               <q-icon name="find_replace" class="q-mr-sm" />
               Substituição de {{ store.portaria === '1510' ? 'PIS' : 'CPF' }}
             </div>
-            <div class="text-caption text-grey-7 q-mb-md">
-              Troca o {{ store.portaria === '1510' ? 'PIS' : 'CPF' }} de um funcionário nas marcações.
-              Útil quando o colaborador bateu ponto com o crachá errado.
-            </div>
 
-            <!-- Switch de modo — apenas 2 opções -->
-            <div class="q-mb-md">
-              <div class="text-caption text-weight-medium text-grey-8 q-mb-xs">Abrangência da substituição:</div>
-              <q-btn-toggle
-                v-model="replaceMode"
-                spread
-                unelevated
-                :toggle-color="store.isDark ? 'white' : 'primary'"
-                :toggle-text-color="store.isDark ? 'black' : 'white'"
-                :color="store.isDark ? 'grey-10' : 'grey-2'"
-                :text-color="store.isDark ? 'grey-6' : 'grey-8'"
-                :options="replaceModeOptions"
-                class="mode-toggle"
-                :dark="store.isDark"
-              />
-              <div class="text-caption text-grey-6 q-mt-xs">
-                <span v-if="replaceMode === 'batch'">
-                  Substitui em <strong>todos os registros</strong> onde o {{ store.portaria === '1510' ? 'PIS' : 'CPF' }} bater.
-                </span>
-                <span v-else>
-                  Substitui <strong>apenas nos NSRs informados</strong> abaixo.
-                </span>
+            <template v-if="!hasPassword || isUnlocked">
+              <div class="text-caption text-grey-7 q-mb-md">
+                Troca o {{ store.portaria === '1510' ? 'PIS' : 'CPF' }} de um funcionário nas marcações.
+                Útil quando o colaborador bateu ponto com o crachá errado.
               </div>
-            </div>
 
-            <!-- Campos: documento incorreto → correto -->
-            <div class="q-gutter-md">
-              <q-input
-                outlined dense
-                v-model="replaceForm.from"
-                :label="`${store.portaria === '1510' ? 'PIS' : 'CPF'} incorreto (a localizar)`"
-                class="soft-input"
-                :hint="`Digite apenas os dígitos do ${store.portaria === '1510' ? 'PIS (11 dígitos)' : 'CPF (11 dígitos)'}`"
-              />
-              <q-input
-                outlined dense
-                v-model="replaceForm.to"
-                :label="`${store.portaria === '1510' ? 'PIS' : 'CPF'} correto (substituir por)`"
-                class="soft-input"
-                :hint="store.portaria === '1510'
-                  ? 'PIS: 11 dígitos. Mais de 12 dígitos não é aceito.'
-                  : 'CPF: 11 dígitos. Mais de 12 dígitos não é aceito.'"
-              />
+              <!-- Switch de modo — apenas 2 opções -->
+              <div class="q-mb-md">
+                <div class="text-caption text-weight-medium text-grey-8 q-mb-xs">Abrangência da substituição:</div>
+                <q-btn-toggle
+                  v-model="replaceMode"
+                  spread
+                  unelevated
+                  :toggle-color="store.isDark ? 'white' : 'primary'"
+                  :toggle-text-color="store.isDark ? 'black' : 'white'"
+                  :color="store.isDark ? 'grey-10' : 'grey-2'"
+                  :text-color="store.isDark ? 'grey-6' : 'grey-8'"
+                  :options="replaceModeOptions"
+                  class="mode-toggle"
+                  :dark="store.isDark"
+                />
+                <div class="text-caption text-grey-6 q-mt-xs">
+                  <span v-if="replaceMode === 'batch'">
+                    Substitui em <strong>todos os registros</strong> onde o {{ store.portaria === '1510' ? 'PIS' : 'CPF' }} bater.
+                  </span>
+                  <span v-else>
+                    Substitui <strong>apenas nos NSRs informados</strong> abaixo.
+                  </span>
+                </div>
+              </div>
 
-
-              <!-- Campo NSR - só aparece no modo Somente por NSR -->
-              <div v-if="replaceMode === 'manual'" class="q-mt-md">
+              <!-- Campos: documento incorreto → correto -->
+              <div class="q-gutter-md">
                 <q-input
                   outlined dense
-                  v-model="replaceForm.nsrList"
-                  :label="(nsrFocused || replaceForm.nsrList) ? undefined : 'NSRs dos registros a alterar'"
+                  v-model="replaceForm.from"
+                  :label="`${store.portaria === '1510' ? 'PIS' : 'CPF'} incorreto (a localizar)`"
                   class="soft-input"
-                  hint="Separe por vírgula: ex. 100, 101, 102"
-                  :placeholder="(nsrFocused || replaceForm.nsrList) ? 'Ex: 100, 101, 102' : ''"
-                  @focus="nsrFocused = true"
-                  @blur="nsrFocused = false"
+                  :hint="`Digite apenas os dígitos do ${store.portaria === '1510' ? 'PIS (11 dígitos)' : 'CPF (11 dígitos)'}`"
+                />
+                <q-input
+                  outlined dense
+                  v-model="replaceForm.to"
+                  :label="`${store.portaria === '1510' ? 'PIS' : 'CPF'} correto (substituir por)`"
+                  class="soft-input"
+                  :hint="store.portaria === '1510'
+                    ? 'PIS: 11 dígitos. Mais de 12 dígitos não é aceito.'
+                    : 'CPF: 11 dígitos. Mais de 12 dígitos não é aceito.'"
+                />
+
+
+                <!-- Campo NSR - só aparece no modo Somente por NSR -->
+                <div v-if="replaceMode === 'manual'" class="q-mt-md">
+                  <q-input
+                    outlined dense
+                    v-model="replaceForm.nsrList"
+                    :label="(nsrFocused || replaceForm.nsrList) ? undefined : 'NSRs dos registros a alterar'"
+                    class="soft-input"
+                    hint="Separe por vírgula: ex. 100, 101, 102"
+                    :placeholder="(nsrFocused || replaceForm.nsrList) ? 'Ex: 100, 101, 102' : ''"
+                    @focus="nsrFocused = true"
+                    @blur="nsrFocused = false"
+                  />
+                </div>
+              </div>
+
+              <div class="text-right q-mt-md">
+                <q-btn
+                  color="primary"
+                  icon="swap_horiz"
+                  label="Aplicar Substituição"
+                  unelevated
+                  class="soft-btn soft-btn-primary"
+                  @click="openReplaceConfirm"
+                  :disable="!replaceForm.from || !replaceForm.to"
                 />
               </div>
-            </div>
-
-            <div class="text-right q-mt-md">
-              <q-btn
-                color="primary"
-                icon="swap_horiz"
-                label="Aplicar Substituição"
-                unelevated
-                class="soft-btn soft-btn-primary"
-                @click="openReplaceConfirm"
-                :disable="!replaceForm.from || !replaceForm.to"
-              />
+            </template>
+            <div v-else class="flex flex-center q-pa-lg text-center" style="min-height: 200px;">
+               <div>
+                 <q-icon name="lock" size="48px" color="grey-4" />
+                 <div class="text-caption text-grey-6 q-mt-sm">Protegido por senha técnica</div>
+               </div>
             </div>
           </q-card-section>
         </q-card>
@@ -143,52 +164,60 @@
               Reindexar NSR
             </div>
 
-            <!-- O que é o NSR -->
-            <q-card flat bordered class="nsr-info-box q-mb-md">
-              <q-card-section class="q-pa-sm">
-                <div class="text-caption text-weight-bold q-mb-xs" style="color: var(--qm-warning-dark);">O que é o NSR?</div>
-                <div class="text-caption text-grey-7">
-                  O <strong>NSR (Número Sequencial de Registro)</strong> é o &ldquo;número de linha&rdquo; do arquivo AFD.
-                  Cada linha tem um número único e crescente. Se o arquivo foi gerado incompleto
-                  (começando no NSR 1000, por exemplo) ou tem lacunas, o REP pode rejeitar a leitura.
-                </div>
-                <q-separator class="q-my-sm" />
-                <div class="text-caption text-grey-7">
-                  <b>Reindexar na exportação</b> recalcula os NSRs em sequência crescente a partir
-                  do número configurado abaixo — sem alterar nada em memória.
-                  Combinado com filtros de data ou NSR, o arquivo exportado 
-                  já sairá com a numeração correta a partir desse ponto.
-                </div>
-              </q-card-section>
-            </q-card>
+            <template v-if="!hasPassword || isUnlocked">
+              <!-- O que é o NSR -->
+              <q-card flat bordered class="nsr-info-box q-mb-md">
+                <q-card-section class="q-pa-sm">
+                  <div class="text-caption text-weight-bold q-mb-xs" style="color: var(--qm-warning-dark);">O que é o NSR?</div>
+                  <div class="text-caption text-grey-7">
+                    O <strong>NSR (Número Sequencial de Registro)</strong> é o &ldquo;número de linha&rdquo; do arquivo AFD.
+                    Cada linha tem um número único e crescente. Se o arquivo foi gerado incompleto
+                    (começando no NSR 1000, por exemplo) ou tem lacunas, o REP pode rejeitar a leitura.
+                  </div>
+                  <q-separator class="q-my-sm" />
+                  <div class="text-caption text-grey-7">
+                    <b>Reindexar na exportação</b> recalcula os NSRs em sequência crescente a partir
+                    do número configurado abaixo — sem alterar nada em memória.
+                    Combinado com filtros de data ou NSR, o arquivo exportado 
+                    já sairá com a numeração correta a partir desse ponto.
+                  </div>
+                </q-card-section>
+              </q-card>
 
-            <!-- Toggle + NSR inicial -->
-            <div class="row items-center justify-between q-mb-sm">
-              <div>
-                <div class="text-caption text-weight-bold">Reindexar NSR na exportação</div>
-                <div class="text-caption text-grey-6">Recalcula os NSRs ao baixar o arquivo</div>
+              <!-- Toggle + NSR inicial -->
+              <div class="row items-center justify-between q-mb-sm">
+                <div>
+                  <div class="text-caption text-weight-bold">Reindexar NSR na exportação</div>
+                  <div class="text-caption text-grey-6">Recalcula os NSRs ao baixar o arquivo</div>
+                </div>
+                <q-toggle
+                  v-model="store.settings.reindexNsrExport"
+                  color="primary"
+                />
               </div>
-              <q-toggle
-                v-model="store.settings.reindexNsrExport"
-                color="primary"
-              />
-            </div>
 
-            <!-- NSR inicial (só visível quando toggle ativo) -->
-            <div v-if="store.settings.reindexNsrExport" class="q-mt-sm">
-              <q-input
-                outlined dense
-                v-model.number="store.settings.reindexNsrStart"
-                type="number"
-                label="NSR inicial (começar a partir de)"
-                class="soft-input"
-                hint="O primeiro registro exportado receberá este número"
-                :rules="[v => v >= 1 || 'O NSR precisa ser maior que zero']"
-              />
-              <div class="text-caption text-grey-6 q-mt-xs">
-                Exemplo: filtrar de 01/03 a 31/03 + NSR inicial 500 → exporta só esse período
-                com NSRs começando em 500.
+              <!-- NSR inicial (só visível quando toggle ativo) -->
+              <div v-if="store.settings.reindexNsrExport" class="q-mt-sm">
+                <q-input
+                  outlined dense
+                  v-model.number="store.settings.reindexNsrStart"
+                  type="number"
+                  label="NSR inicial (começar a partir de)"
+                  class="soft-input"
+                  hint="O primeiro registro exportado receberá este número"
+                  :rules="[v => v >= 1 || 'O NSR precisa ser maior que zero']"
+                />
+                <div class="text-caption text-grey-6 q-mt-xs">
+                  Exemplo: filtrar de 01/03 a 31/03 + NSR inicial 500 → exporta só esse período
+                  com NSRs começando em 500.
+                </div>
               </div>
+            </template>
+            <div v-else class="flex flex-center q-pa-lg text-center" style="min-height: 200px;">
+               <div>
+                 <q-icon name="lock" size="48px" color="grey-4" />
+                 <div class="text-caption text-grey-6 q-mt-sm">Protegido por senha técnica</div>
+               </div>
             </div>
 
           </q-card-section>
@@ -206,105 +235,114 @@
               <q-icon name="transform" class="q-mr-sm" />
               Trocar Portaria do Arquivo
             </div>
-            <div class="text-caption text-grey-7 q-mb-md">
-              Converte o formato inteiro do arquivo entre <strong>Portaria 1510</strong> e
-              <strong>Portaria 671 (Padrão C)</strong>. Use quando o documento do funcionário foi
-              enviado ao REP errado (ex: PIS enviado para REP 1510 vs CPF para REP 671).
-            </div>
 
-            <!-- Estado atual + Opções -->
-            <div class="row q-col-gutter-md items-stretch">
-
-              <!-- Painel esquerdo: estado atual -->
-              <div class="col-12 col-md-4">
-                <div class="portaria-status-box">
-                  <div class="text-caption text-grey-6 q-mb-xs">Arquivo atual:</div>
-                  <div class="text-h5 text-weight-bold" :class="store.portaria === '1510' ? 'text-orange' : 'text-primary'">
-                    {{ store.portaria === '1510' ? 'Portaria 1510' : 'Portaria 671' }}
-                  </div>
-                  <div class="text-caption text-grey-6 q-mt-xs">
-                    {{ store.portaria === '1510'
-                      ? 'Data: DDMMAAAA+HHMM | Identificador: PIS | Sem fuso'
-                      : 'Data: ISO DH | Identificador: CPF (12 chars) | Com fuso + CRC'
-                    }}
-                  </div>
-                </div>
+            <template v-if="!hasPassword || isUnlocked">
+              <div class="text-caption text-grey-7 q-mb-md">
+                Converte o formato inteiro do arquivo entre <strong>Portaria 1510</strong> e
+                <strong>Portaria 671 (Padrão C)</strong>. Use quando o documento do funcionário foi
+                enviado ao REP errado (ex: PIS enviado para REP 1510 vs CPF para REP 671).
               </div>
 
-              <!-- Opções de conversão -->
-              <div class="col-12 col-md-8">
-                <div class="row q-col-gutter-md">
+              <!-- Estado atual + Opções -->
+              <div class="row q-col-gutter-md items-stretch">
 
-                  <!-- 1510 → 671 -->
-                  <div class="col-12 col-sm-6" v-if="store.portaria === '1510'">
-                    <q-card flat bordered class="convert-option-card" :dark="store.isDark">
-                      <q-card-section class="q-pa-md">
-                        <div class="text-subtitle2 text-weight-bold text-primary q-mb-xs">
-                          <q-icon name="arrow_forward" class="q-mr-xs" />
-                          Converter para Portaria 671
-                        </div>
-                        <div class="text-caption text-grey-7 q-mb-md">
-                          Converte data para formato ISO, ajusta CPF (12 chars), adiciona
-                          campo de fuso (-0300) e calcula CRC-16/KERMIT em cada registro.
-                        </div>
-                        <div class="q-mb-sm">
-                          <div class="text-caption text-grey-6 q-mb-xs">Fuso horário para usar:</div>
-                          <q-select
-                            outlined dense
-                            v-model="conversionOptions.fuso"
-                            :options="fusoOptions"
-                            class="soft-input"
-                            emit-value map-options
+                <!-- Painel esquerdo: estado atual -->
+                <div class="col-12 col-md-4">
+                  <div class="portaria-status-box">
+                    <div class="text-caption text-grey-6 q-mb-xs">Arquivo atual:</div>
+                    <div class="text-h5 text-weight-bold" :class="store.portaria === '1510' ? 'text-orange' : 'text-primary'">
+                      {{ store.portaria === '1510' ? 'Portaria 1510' : 'Portaria 671' }}
+                    </div>
+                    <div class="text-caption text-grey-6 q-mt-xs">
+                      {{ store.portaria === '1510'
+                        ? 'Data: DDMMAAAA+HHMM | Identificador: PIS | Sem fuso'
+                        : 'Data: ISO DH | Identificador: CPF (12 chars) | Com fuso + CRC'
+                      }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Opções de conversão -->
+                <div class="col-12 col-md-8">
+                  <div class="row q-col-gutter-md">
+
+                    <!-- 1510 → 671 -->
+                    <div class="col-12 col-sm-6" v-if="store.portaria === '1510'">
+                      <q-card flat bordered class="convert-option-card" :dark="store.isDark">
+                        <q-card-section class="q-pa-md">
+                          <div class="text-subtitle2 text-weight-bold text-primary q-mb-xs">
+                            <q-icon name="arrow_forward" class="q-mr-xs" />
+                            Converter para Portaria 671
+                          </div>
+                          <div class="text-caption text-grey-7 q-mb-md">
+                            Converte data para formato ISO, ajusta CPF (12 chars), adiciona
+                            campo de fuso (-0300) e calcula CRC-16/KERMIT em cada registro.
+                          </div>
+                          <div class="q-mb-sm">
+                            <div class="text-caption text-grey-6 q-mb-xs">Fuso horário para usar:</div>
+                            <q-select
+                              outlined dense
+                              v-model="conversionOptions.fuso"
+                              :options="fusoOptions"
+                              class="soft-input"
+                              emit-value map-options
+                            />
+                          </div>
+                          <q-btn
+                            color="primary"
+                            icon="transform"
+                            label="Converter para 671"
+                            unelevated
+                            class="soft-btn soft-btn-primary full-width"
+                            @click="openConvertConfirm('1510_to_671')"
                           />
-                        </div>
-                        <q-btn
-                          color="primary"
-                          icon="transform"
-                          label="Converter para 671"
-                          unelevated
-                          class="soft-btn soft-btn-primary full-width"
-                          @click="openConvertConfirm('1510_to_671')"
-                        />
-                      </q-card-section>
-                    </q-card>
-                  </div>
+                        </q-card-section>
+                      </q-card>
+                    </div>
 
-                  <!-- 671 → 1510 -->
-                  <div class="col-12 col-sm-6" v-if="store.portaria === '671'">
-                    <q-card flat bordered class="convert-option-card" :dark="store.isDark">
-                      <q-card-section class="q-pa-md">
-                        <div class="text-subtitle2 text-weight-bold text-orange q-mb-xs">
-                          <q-icon name="arrow_back" class="q-mr-xs" />
-                          Converter para Portaria 1510
-                        </div>
-                        <div class="text-caption text-grey-7 q-mb-md">
-                          Converte data ISO para DDMMAAAA, remove CRC, ajusta identificador
-                          para PIS (12 chars).
-                        </div>
-                        <div class="row items-center q-mb-md">
-                          <q-toggle v-model="conversionOptions.includeCrc1510" color="orange" />
-                          <span class="text-caption text-grey-7 q-ml-sm">Incluir CRC no arquivo convertido</span>
-                          <q-tooltip>
-                            A Portaria 1510 normalmente não tem CRC, mas alguns fabricantes incluem.
-                            Ative apenas se o REP de destino exigir.
-                          </q-tooltip>
-                        </div>
-                        <q-btn
-                          color="orange"
-                          icon="transform"
-                          label="Converter para 1510"
-                          unelevated
-                          class="soft-btn full-width"
-                          @click="openConvertConfirm('671_to_1510')"
-                        />
-                      </q-card-section>
-                    </q-card>
-                  </div>
+                    <!-- 671 → 1510 -->
+                    <div class="col-12 col-sm-6" v-if="store.portaria === '671'">
+                      <q-card flat bordered class="convert-option-card" :dark="store.isDark">
+                        <q-card-section class="q-pa-md">
+                          <div class="text-subtitle2 text-weight-bold text-orange q-mb-xs">
+                            <q-icon name="arrow_back" class="q-mr-xs" />
+                            Converter para Portaria 1510
+                          </div>
+                          <div class="text-caption text-grey-7 q-mb-md">
+                            Converte data ISO para DDMMAAAA, remove CRC, ajusta identificador
+                            para PIS (12 chars).
+                          </div>
+                          <div class="row items-center q-mb-md">
+                            <q-toggle v-model="conversionOptions.includeCrc1510" color="orange" />
+                            <span class="text-caption text-grey-7 q-ml-sm">Incluir CRC no arquivo convertido</span>
+                            <q-tooltip>
+                              A Portaria 1510 normalmente não tem CRC, mas alguns fabricantes incluem.
+                              Ative apenas se o REP de destino exigir.
+                            </q-tooltip>
+                          </div>
+                          <q-btn
+                            color="orange"
+                            icon="transform"
+                            label="Converter para 1510"
+                            unelevated
+                            class="soft-btn full-width"
+                            @click="openConvertConfirm('671_to_1510')"
+                          />
+                        </q-card-section>
+                      </q-card>
+                    </div>
 
+                  </div>
                 </div>
               </div>
-
+            </template>
+            <div v-else class="flex flex-center q-pa-lg text-center" style="min-height: 200px;">
+               <div>
+                 <q-icon name="lock" size="48px" color="grey-4" />
+                 <div class="text-caption text-grey-6 q-mt-sm">Protegido por senha técnica</div>
+               </div>
             </div>
+
           </q-card-section>
         </q-card>
       </div>
@@ -349,7 +387,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, computed } from 'vue'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useQuasar } from 'quasar'
 import { useValidators } from 'src/composables/useValidators'
@@ -364,6 +402,32 @@ export default defineComponent({
     const store = useAfdStore()
     const $q = useQuasar()
     const { validateBulk } = useValidators()
+
+    // ── Proteção Técnica ──────────────────────────────────────────
+    const isUnlocked = ref(false)
+    const hasPassword = computed(() => {
+      return !!process.env.TECH_PASSWORD && process.env.TECH_PASSWORD !== ''
+    })
+
+    const promptPassword = () => {
+      $q.dialog({
+        title: 'Acesso Técnico',
+        message: 'Informe a senha técnica para desbloquear estas opções:',
+        prompt: {
+          model: '',
+          type: 'password'
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(data => {
+        if (data === process.env.TECH_PASSWORD) {
+          isUnlocked.value = true
+          $q.notify({ type: 'positive', message: 'Opções técnicas desbloqueadas!' })
+        } else {
+          $q.notify({ type: 'negative', message: 'Senha incorreta.' })
+        }
+      })
+    }
 
     // ── Referências dos modais ─────────────────────────────────────
     const confirmReplaceRef = ref(null)
@@ -438,14 +502,14 @@ export default defineComponent({
 
     const openReplaceConfirm = () => {
       const fromRaw = replaceForm.value.from.trim()
-      const toRaw = replaceForm.value.to.trim()
+      const toRawInput = replaceForm.value.to.trim()
 
-      if (!fromRaw || !toRaw) {
+      if (!fromRaw || !toRawInput) {
         $q.notify({ type: 'warning', message: 'Preencha os dois campos de documento.' })
         return
       }
 
-      const toDoc = parseDocumento(toRaw)
+      const toDoc = parseDocumento(toRawInput)
       if (toDoc && toDoc.value === null) {
         $q.notify({ type: 'negative', message: toDoc.warning })
         return
@@ -465,7 +529,7 @@ export default defineComponent({
       confirm.value.replace = {
         open: true,
         title: 'Substituir Documento',
-        message: `Substituir "${fromRaw}" por "${toRaw}" — Modo: ${modeLabels[replaceMode.value]}`,
+        message: `Substituir "${fromRaw}" por "${toRawInput}" — Modo: ${modeLabels[replaceMode.value]}`,
         warning: ''
       }
     }
@@ -809,9 +873,11 @@ export default defineComponent({
       executeConvert,
       // Modais
       confirm,
-      confirmReplaceRef,
-      confirmConvertRef,
-      nsrFocused
+      nsrFocused,
+      // Proteção
+      isUnlocked,
+      hasPassword,
+      promptPassword
     }
   }
 })
