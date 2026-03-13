@@ -2,6 +2,12 @@
   <img src=".\afdmaster\src\assets\app-logo.png" width="180" alt="AFDMaster Logo" />
   <h1>⌚ AFDMaster</h1>
   <p><b>Análise, Edição, Validação e Síntese de Arquivos AFD (Relógios de Ponto)</b></p>
+
+  <p>
+    <a href="https://demo.afdmaster.pulz.dev.br">
+      <img src="https://img.shields.io/badge/🚀%20Acessar%20Demo-Live%20Preview-22c55e?style=for-the-badge" />
+    </a>
+  </p>
   
   <p>
     <img src="https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white" alt="Vue.js" />
