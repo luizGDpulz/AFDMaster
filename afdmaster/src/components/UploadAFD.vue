@@ -42,7 +42,7 @@
           <q-btn
             icon="description"
             label="Exemplo Portaria 1510"
-            color="secondary"
+            color="primary"
             unelevated
             class="soft-btn"
             :loading="loadingDemo === '1510'"

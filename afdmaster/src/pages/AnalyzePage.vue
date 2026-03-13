@@ -206,12 +206,20 @@
           <template v-slot:avatar>
             <q-icon name="tips_and_updates" color="blue-7" size="18px"/>
           </template>
-          Quer usar sem limitações? O projeto é open-source —
-          <a href="https://github.com/luizGDpulz/AFDMaster" target="_blank" class="text-primary">faça seu próprio deploy</a>.
+          Quer usar sem limitações? O projeto é open-source sob a licença GPL-3.0-SA —
+          <a href="https://github.com/luizGDpulz/AFDMaster" target="_blank" class="text-blue-9 text-decoration-none" >Faça seu próprio Deploy aqui</a>.
         </q-banner>
       </q-card-section>
 
       <q-card-actions align="right" class="q-px-lg q-pb-lg q-pt-xs">
+        <q-btn
+          unelevated
+          color="orange-8"
+          label="Sobre"
+          icon="info"
+          class="soft-btn text-weight-bold"
+          @click="aboutpage"
+        />
         <q-btn
           unelevated
           color="orange-8"
@@ -228,6 +236,7 @@
 
 <script>
 import { defineComponent, ref, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAfdStore } from 'src/stores/afdStore'
 import { useQuasar } from 'quasar'
 import { useGenerator } from 'src/composables/useGenerator'
@@ -241,6 +250,7 @@ export default defineComponent({
   components: { UploadAFD, AfdTable, ValidationReport, AfdAdvancedEditor },
   setup() {
     const store = useAfdStore()
+    const router = useRouter()
     const tab = ref('records')
     const demoWelcome = ref(false)
     const isDemo = process.env.DEMO_MODE === 'true'
@@ -254,6 +264,10 @@ export default defineComponent({
     const uploadModal = ref(false)
     const $q = useQuasar()
     const { generateFileContent } = useGenerator()
+
+    const aboutpage = () => {
+       router.push('/about')
+    }
 
     const handleFilterError = (errorMsg) => {
        store.setFilters({
@@ -391,7 +405,8 @@ export default defineComponent({
       handleFilterWarning,
       exportFilters,
       demoWelcome,
-      isDemo
+      isDemo,
+      aboutpage
     }
   }
 })
