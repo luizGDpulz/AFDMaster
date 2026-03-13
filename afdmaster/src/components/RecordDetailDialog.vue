@@ -200,7 +200,7 @@
             </div>
             <div class="detail-item">
               <div class="detail-label">{{ identificadorLabel }}</div>
-              <div class="detail-value text-grey-8 text-mono">{{ formatPIS(record.cpf || record.pis) || '—' }}</div>
+              <div class="detail-value text-grey-8 text-mono">{{ identificadorLabel == 'CPF' ? formatCPF(record.cpf) : (identificadorLabel == 'PIS' ? formatPIS(record.pis) : '—') }}</div>
             </div>
             <div class="detail-item" v-if="record.dataHora">
               <div class="detail-label">Data</div>
